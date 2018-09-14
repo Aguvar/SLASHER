@@ -7,14 +7,37 @@ using System.Threading.Tasks;
 
 namespace SlasherServer.Game
 {
-    public class Monster : Player
+    public class Monster : IPlayer
     {
         public int Id { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public int Health { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-
-        public void Attack()
+        
+        
+        public Monster()
         {
-            throw new NotImplementedException();
+            this.Health = 100;
+        }
+        
+        public int AttackDamage()
+        {
+            return 10;
+        }        
+        
+        public bool ReceiveDamage(int damage)
+        {
+            this.Health -= damage;
+            if(this.Health <= 0)
+            {
+                return true;
+            } else
+            {
+                return false;
+            }
+        }
+        
+        public char Type()
+        {
+            return 'M';
         }
     }
 }

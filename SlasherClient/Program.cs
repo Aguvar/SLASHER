@@ -26,7 +26,7 @@ namespace SlasherClient
         {
             string[] command = input.ToLower().Split(' ');
 
-            if (command.Length <=0 || command.Length > 3)
+            if (command.Length <= 0 || command.Length > 3)
             {
                 Console.WriteLine("Invalid input");
                 return;
@@ -40,13 +40,13 @@ namespace SlasherClient
                     {
                         switch (command[i])
                         {
-                            case "N":
-                                break;
                             case "W":
                                 break;
-                            case "E":
+                            case "A":
                                 break;
                             case "S":
+                                break;
+                            case "D":
                                 break;
                             default:
                                 Console.WriteLine("Invalid input");

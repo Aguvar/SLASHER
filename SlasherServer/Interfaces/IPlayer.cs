@@ -6,12 +6,15 @@ using System.Threading.Tasks;
 
 namespace SlasherServer.Interfaces
 {
-    interface Player
+    public interface IPlayer
     {
         int Id { get; set; }
         int Health { get; set; }
-
-        void Attack();
-
+        
+        int AttackDamage();
+        
+        //Observer pattern can be implemented
+        bool ReceiveDamage(int damage);
+        char Type();
     }
 }
