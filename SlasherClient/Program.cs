@@ -8,6 +8,13 @@ namespace SlasherClient
 {
     class Program
     {
+        private const string UP_MOVEMENT_ARG = "N";
+        private const string LEFT_MOVEMENT_ARG = "W";
+        private const string RIGHT_MOVEMENT_ARG = "E";
+        private const string DOWN_MOVEMENT_ARG = "S";
+        private const string ATTACK_COMMAND = "attack";
+        private const string MOVE_COMMAND = "move";
+
         static void Main(string[] args)
         {
             //Conexion a cliente
@@ -34,17 +41,19 @@ namespace SlasherClient
 
             switch (command[0])
             {
-                case "move":
+                case MOVE_COMMAND:
                     //Manejar el movimiento
                     for (int i = 1; i < command.Length; i++)
                     {
                         switch (command[i])
                         {
-                            case "W":
+                            case UP_MOVEMENT_ARG:
                                 break;
-                            case "A":
+                            case LEFT_MOVEMENT_ARG:
                                 break;
-                            case "S":
+                            case RIGHT_MOVEMENT_ARG:
+                                break;
+                            case DOWN_MOVEMENT_ARG:
                                 break;
                             case "D":
                                 break;
@@ -54,7 +63,7 @@ namespace SlasherClient
                         }
                     }
                     break;
-                case "attack":
+                case ATTACK_COMMAND:
                     //Manejar el ataque
                     Console.WriteLine("You attack");
                     break;
