@@ -42,6 +42,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Authentication\User.cs" />
     <Compile Include="Game\GameHandler.cs" />
     <Compile Include="Game\Monster.cs" />
     <Compile Include="Game\Survivor.cs" />

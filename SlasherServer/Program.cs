@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SlasherServer.Authentication;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -13,8 +14,14 @@ namespace SlasherServer
     {
         private const string IpString = "192.168.0.50";
 
+        private static List<User> Users;
+        private static Dictionary<Guid, User> LoggedUsers;
+
         static void Main(string[] args)
         {
+            Users = new List<User>();
+            LoggedUsers = new Dictionary<Guid, User>();
+
             Console.WriteLine("---Slasher Server V.0.01---");
             Console.WriteLine();
             Console.WriteLine("Enter the port to listen on:");
@@ -63,13 +70,27 @@ namespace SlasherServer
                 case "help":
                     Console.WriteLine("List all commands");
                     break;
+                case "listusers":
+                    foreach (var user in Users)
+                    {
+                        Console.WriteLine(user.Nickname);
+                    }
+                    break;
+                case "listloggedusers":
+                    foreach (var pair in LoggedUsers)
+                    {
+                        Console.WriteLine(pair.Value.Nickname);
+                    }
+                    break;
                 default:
                     break;
             }
         }
 
-        private static void ReceiveMsgService(Socket client)
+        private static void HandleClientConnection(Socket client)
         {
+            Guid socketId = Guid.NewGuid();
+
             while (true)
             {
                 var msgLength = new byte[4];
@@ -78,39 +99,91 @@ namespace SlasherServer
                 int msgLengthInt = BitConverter.ToInt32(msgLength, 0);
                 var msgBytes = new byte[msgLengthInt];
                 client.Receive(msgBytes);
-                Console.WriteLine(Encoding.ASCII.GetString(msgBytes));
+                //Console.WriteLine(Encoding.ASCII.GetString(msgBytes));
+                string message = Encoding.ASCII.GetString(msgBytes);
+
+                string response = ParseClientMessage(message, socketId);
+
+                if (!string.IsNullOrWhiteSpace(response))
+                {
+                    SendMessageToClient(client, response);
+                }
             }
         }
 
-        private static void SendMsgService(Socket client)
+        private static string ParseClientMessage(string message, Guid socketId)
         {
-            while (true)
-            {
-                var msg = Console.ReadLine();
-                var byteMsg = Encoding.ASCII.GetBytes(msg);
+            string[] commandArray = message.Split('#');
 
-                var length = byteMsg.Count();
-                var posLength = 0;
-                byte[] byteLength = BitConverter.GetBytes(length);
-                while (posLength < 4)
-                {
-                    var sent = client.Send(byteLength, posLength, 4 - posLength, SocketFlags.None);
-                    if (sent == 0)
+            switch (commandArray[0].ToLower())
+            {
+                case "signup":
+                    Users.Add(new User()
                     {
-                        throw new SocketException();
-                    }
-                    posLength += sent;
-                }
-                var pos = 0;
-                while (pos < length)
-                {
-                    var sent = client.Send(byteMsg, pos, length - pos, SocketFlags.None);
-                    if (sent == 0)
+                        Nickname = commandArray[1],
+                        PhotoRoute = commandArray[2]
+                    });
+                    return string.Format("consoleprint#User {0} was registered!", commandArray[1]);
+                case "login":
+                    string nickname = commandArray[1];
+                    if (Users.Any(u => u.Nickname.Equals(nickname)))
                     {
-                        throw new SocketException();
+                        if (!LoggedUsers.Any(u => u.Value.Nickname.Equals(nickname)))
+                        {
+                            User userToLog = Users.Where(u => u.Nickname.Equals(nickname)).First();
+                            LoggedUsers.Add(socketId, userToLog);
+                            return "loggedin";
+                        }
+                        else
+                        {
+                            return "consoleprint#The user is already logged in, please select another nickname";
+                        }
                     }
-                    pos += sent;
+                    else
+                    {
+                        return "consoleprint#The nickname does not exist";
+                    }
+                case "logout":
+                    if (LoggedUsers.ContainsKey(socketId))
+                    {
+                        LoggedUsers.Remove(socketId);
+                        return "loggedout";
+                    }
+                    else
+                    {
+                        return "consoleprint#You are not logged in, willy nilly";
+                    }
+                default:
+                    return "";
+            }
+            throw new InvalidOperationException("An unknown command was received.");
+        }
+
+        private static void SendMessageToClient(Socket clientConnection, string message)
+        {
+            var byteMsg = Encoding.ASCII.GetBytes(message);
+
+            var length = byteMsg.Count();
+            var posLength = 0;
+            byte[] byteLength = BitConverter.GetBytes(length);
+            while (posLength < 4)
+            {
+                var sent = clientConnection.Send(byteLength, posLength, 4 - posLength, SocketFlags.None);
+                if (sent == 0)
+                {
+                    throw new SocketException();
                 }
+                posLength += sent;
+            }
+            var pos = 0;
+            while (pos < length)
+            {
+                var sent = clientConnection.Send(byteMsg, pos, length - pos, SocketFlags.None);
+                if (sent == 0)
+                {
+                    throw new SocketException();
+                }
+                pos += sent;
             }
         }
 
@@ -122,10 +195,8 @@ namespace SlasherServer
                 var client = serverSocket.Accept();
                 Console.WriteLine("Client Connected!");
 
-                Thread sendThread = new Thread(() => SendMsgService(client));
-                Thread receiveThread = new Thread(() => ReceiveMsgService(client));
+                Thread receiveThread = new Thread(() => HandleClientConnection(client));
 
-                sendThread.Start();
                 receiveThread.Start();
             }
         }
