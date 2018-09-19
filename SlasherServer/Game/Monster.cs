@@ -9,19 +9,21 @@ namespace SlasherServer.Game
 {
     public class Monster : IPlayer
     {
+
         public int Id { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        public int Health { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        
-        
+
+        private int _health = 100;
+        public int Health { get => _health; set => _health = value; }
+
+        private int _attackDamage = 10;
+        public int AttackDamage { get { return _attackDamage; } private set { _attackDamage = value; } }
+
         public Monster()
         {
             this.Health = 100;
         }
         
-        public int AttackDamage()
-        {
-            return 10;
-        }        
+             
         
         public bool ReceiveDamage(int damage)
         {

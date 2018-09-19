@@ -27,7 +27,7 @@ namespace SlasherServer.Game
             Position playerPosition = GetPlayerPosition(playerWhoAttacks);
             if (playerPosition != null)
             {
-                AttackNeighbours(playerPosition, playerWhoAttacks.AttackDamage());
+                AttackNeighbours(playerPosition, playerWhoAttacks.AttackDamage);
             }
         }
         

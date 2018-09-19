@@ -10,8 +10,8 @@ namespace SlasherServer.Interfaces
     {
         int Id { get; set; }
         int Health { get; set; }
+        int AttackDamage { get; }
         
-        int AttackDamage();
         
         //Observer pattern can be implemented
         bool ReceiveDamage(int damage);
