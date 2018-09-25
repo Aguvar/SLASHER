@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -9,6 +10,8 @@ using System.Threading.Tasks;
 
 namespace SlasherClient
 {
+    //Para pasar imagenes usar Filestream y almacenar las imagenes en una carpeta del servidor
+
     class Program
     {
         private const string UP_MOVEMENT_ARG = "N";
@@ -18,14 +21,14 @@ namespace SlasherClient
         private const string ATTACK_COMMAND = "attack";
         private const string MOVE_COMMAND = "move";
 
-        private const string IpString = "192.168.0.50";
-
         private static bool loggedIn = false;
 
         private static Socket serverConnection;
 
         static void Main(string[] args)
         {
+            string ipString = ConfigurationManager.AppSettings["ipaddress"];
+
             Console.WriteLine("---Slasher Client V.0.01---");
 
             //Conexion a cliente
@@ -37,9 +40,9 @@ namespace SlasherClient
             int serverPort = Int32.Parse(Console.ReadLine());
 
             serverConnection = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            serverConnection.Bind(new IPEndPoint(IPAddress.Parse(IpString), clientPort));
+            serverConnection.Bind(new IPEndPoint(IPAddress.Parse(ipString), clientPort));
 
-            serverConnection.Connect(new IPEndPoint(IPAddress.Parse(IpString), serverPort));
+            serverConnection.Connect(new IPEndPoint(IPAddress.Parse(ipString), serverPort));
             Console.WriteLine("Connected to server!");
 
             Thread receiveThread = new Thread(() => ReceiveMsgService(serverConnection));
@@ -72,7 +75,7 @@ namespace SlasherClient
                 ParseServerMessage(message);
             }
         }
-
+  
         private static void ParseServerMessage(string message)
         {
             string[] commandArray = message.Split('#');

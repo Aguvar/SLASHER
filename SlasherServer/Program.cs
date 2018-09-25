@@ -1,6 +1,7 @@
 ﻿using SlasherServer.Authentication;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -12,23 +13,28 @@ namespace SlasherServer
 {
     class Program
     {
-        private const string IpString = "192.168.0.50";
+
+
+        //private const string IpString = "192.168.0.50";
 
         private static List<User> Users;
         private static Dictionary<Guid, User> LoggedUsers;
 
         static void Main(string[] args)
         {
+            string ipString = ConfigurationManager.AppSettings["ipaddress"];
+
             Users = new List<User>();
             LoggedUsers = new Dictionary<Guid, User>();
 
             Console.WriteLine("---Slasher Server V.0.01---");
             Console.WriteLine();
+
             Console.WriteLine("Enter the port to listen on:");
             int listenPort = Int32.Parse(Console.ReadLine());
 
             var serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            serverSocket.Bind(new IPEndPoint(IPAddress.Parse(IpString), listenPort));
+            serverSocket.Bind(new IPEndPoint(IPAddress.Parse(ipString), listenPort));
             serverSocket.Listen(25);
 
             Thread receiveClientsThread = new Thread(() => ReceiveClients(serverSocket));
