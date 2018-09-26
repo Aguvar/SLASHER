@@ -2,9 +2,11 @@
 using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -93,42 +95,74 @@ namespace SlasherServer
             }
         }
 
-        private static void HandleClientConnection(Socket client)
+        private static void HandleClientConnection(Socket clientConnection)
         {
             Guid socketId = Guid.NewGuid();
 
             while (true)
             {
                 var msgLength = new byte[4];
-                client.Receive(msgLength);
+                clientConnection.Receive(msgLength);
 
                 int msgLengthInt = BitConverter.ToInt32(msgLength, 0);
                 var msgBytes = new byte[msgLengthInt];
-                client.Receive(msgBytes);
+                clientConnection.Receive(msgBytes);
                 //Console.WriteLine(Encoding.ASCII.GetString(msgBytes));
                 string message = Encoding.ASCII.GetString(msgBytes);
 
-                string response = ParseClientMessage(message, socketId);
+                string response = ParseClientMessage(message, socketId, clientConnection);
 
                 if (!string.IsNullOrWhiteSpace(response))
                 {
-                    SendMessageToClient(client, response);
+                    SendMessageToClient(clientConnection, response);
                 }
             }
         }
 
-        private static string ParseClientMessage(string message, Guid socketId)
+        private static string ParseClientMessage(string message, Guid socketId, Socket clientConnection)
         {
             string[] commandArray = message.Split('#');
 
             switch (commandArray[0].ToLower())
             {
                 case "signup":
+
+                    string currentDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                    string avatarRoute = Path.Combine(currentDir, string.Format("Avatars/{0}Avatar.{1}", commandArray[1], commandArray[2]));
+
                     Users.Add(new User()
                     {
                         Nickname = commandArray[1],
-                        PhotoRoute = commandArray[2]
+                        AvatarRoute = avatarRoute
                     });
+
+                    using (FileStream stream = new FileStream(avatarRoute, FileMode.Create))
+                    {
+                        byte[] imagePieces = new byte[8];
+                        clientConnection.Receive(imagePieces);
+                        long imagePiecesLong = BitConverter.ToInt64(imagePieces, 0);
+                        int piecesReceived = 0;
+                        int bytesReceived = 0;
+                        while (piecesReceived < imagePiecesLong )
+                        {
+                            //Aca tenemos que hacer un while, para que vaya recibiendo las piezas de la imagen que pesan cada una a lo sumo 1024 bytes.
+                            byte[] msgLength = new byte[4];
+                            clientConnection.Receive(msgLength);
+
+                            int msgLengthInt = BitConverter.ToInt32(msgLength, 0);
+                            var msgBytes = new byte[msgLengthInt];
+                            clientConnection.Receive(msgBytes);
+                            //Escribir al stream
+                            stream.Seek(bytesReceived, SeekOrigin.Begin);
+
+                            stream.Write(msgBytes, 0, msgBytes.Length);
+
+                            bytesReceived += msgBytes.Length;
+                            piecesReceived++;
+                        }
+                        //stream.Flush();
+                    }
+
                     return string.Format("consoleprint#User {0} was registered!", commandArray[1]);
                 case "login":
                     string nickname = commandArray[1];

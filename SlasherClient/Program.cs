@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -75,7 +76,7 @@ namespace SlasherClient
                 ParseServerMessage(message);
             }
         }
-  
+
         private static void ParseServerMessage(string message)
         {
             string[] commandArray = message.Split('#');
@@ -100,10 +101,10 @@ namespace SlasherClient
 
         private static void SendMessageToServer(Socket serverSocket, string message)
         {
-            var byteMsg = Encoding.ASCII.GetBytes(message);
+            byte[] byteMsg = Encoding.ASCII.GetBytes(message);
 
-            var length = byteMsg.Count();
-            var posLength = 0;
+            int length = byteMsg.Count();
+            int posLength = 0;
             byte[] byteLength = BitConverter.GetBytes(length);
             while (posLength < 4)
             {
@@ -216,11 +217,62 @@ namespace SlasherClient
                 Console.WriteLine(errorMsg);
                 Console.WriteLine("Enter the your avatar route:");
                 photoRoute = Console.ReadLine();
+
+
             }
 
-            string command = string.Format("signup#{0}#{1}", nickname, photoRoute);
+            var filepathArray = photoRoute.Split('.');
+            string imageFormat = filepathArray[filepathArray.Length - 1];
+
+            string command = string.Format("signup#{0}#{1}", nickname, imageFormat);
 
             SendMessageToServer(serverConnection, command);
+
+            //Send image
+            using (FileStream stream = new FileStream(photoRoute, FileMode.Open))
+            {
+                long imageSize = stream.Length;
+                long pieces = (imageSize + 1024 - 1) / 1024;
+
+                byte[] bytePieces = BitConverter.GetBytes(pieces);
+                int piecesPointer = 0;
+                while (piecesPointer < 8)
+                {
+                    var sent = serverConnection.Send(bytePieces, piecesPointer, 8 - piecesPointer, SocketFlags.None);
+                    if (sent == 0)
+                    {
+                        throw new SocketException();
+                    }
+                    piecesPointer += sent;
+                }
+
+                byte[] imageBuffer = new byte[1024];
+                while (stream.Read(imageBuffer, 0, imageBuffer.Length) > 0)
+                {
+                    int length = imageBuffer.Count();
+                    int posLength = 0;
+                    byte[] byteLength = BitConverter.GetBytes(length);
+                    while (posLength < 4)
+                    {
+                        var sent = serverConnection.Send(byteLength, posLength, 4 - posLength, SocketFlags.None);
+                        if (sent == 0)
+                        {
+                            throw new SocketException();
+                        }
+                        posLength += sent;
+                    }
+                    var pos = 0;
+                    while (pos < length)
+                    {
+                        var sent = serverConnection.Send(imageBuffer, pos, length - pos, SocketFlags.None);
+                        if (sent == 0)
+                        {
+                            throw new SocketException();
+                        }
+                        pos += sent;
+                    }
+                }
+            }
         }
     }
 }
