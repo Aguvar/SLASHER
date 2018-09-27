@@ -9,7 +9,7 @@ namespace SlasherServer.Game
 {
     class Survivor : IPlayer
     {
-        public int Id { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public Guid Id { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         private int _health;
         public int Health { get => _health; set => _health = value; }
 

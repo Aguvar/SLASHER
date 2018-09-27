@@ -8,7 +8,7 @@ namespace SlasherServer.Interfaces
 {
     public interface IPlayer
     {
-        int Id { get; set; }
+        Guid Id { get; set; }
         int Health { get; set; }
         int AttackDamage { get; }
         

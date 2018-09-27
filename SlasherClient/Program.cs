@@ -11,8 +11,6 @@ using System.Threading.Tasks;
 
 namespace SlasherClient
 {
-    //Para pasar imagenes usar Filestream y almacenar las imagenes en una carpeta del servidor
-
     class Program
     {
         private const string UP_MOVEMENT_ARG = "N";
@@ -29,8 +27,10 @@ namespace SlasherClient
         static void Main(string[] args)
         {
             string ipString = ConfigurationManager.AppSettings["ipaddress"];
+            string serverIpAddress = ConfigurationManager.AppSettings["serveripaddress"];
 
             Console.WriteLine("---Slasher Client V.0.01---");
+            Console.WriteLine();
 
             //Conexion a cliente
             //Crear thread para recibir avisos del servidor
@@ -43,7 +43,7 @@ namespace SlasherClient
             serverConnection = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             serverConnection.Bind(new IPEndPoint(IPAddress.Parse(ipString), clientPort));
 
-            serverConnection.Connect(new IPEndPoint(IPAddress.Parse(ipString), serverPort));
+            serverConnection.Connect(new IPEndPoint(IPAddress.Parse(serverIpAddress), serverPort));
             Console.WriteLine("Connected to server!");
 
             Thread receiveThread = new Thread(() => ReceiveMsgService(serverConnection));
@@ -69,7 +69,6 @@ namespace SlasherClient
 
                 var msgBytes = new byte[BitConverter.ToInt32(msgLength, 0)];
                 client.Receive(msgBytes);
-                //Console.WriteLine(Encoding.ASCII.GetString(msgBytes));
 
                 string message = Encoding.ASCII.GetString(msgBytes);
 
@@ -154,8 +153,6 @@ namespace SlasherClient
                                 break;
                             case DOWN_MOVEMENT_ARG:
                                 break;
-                            case "D":
-                                break;
                             default:
                                 Console.WriteLine("Invalid input");
                                 return;
@@ -166,9 +163,11 @@ namespace SlasherClient
                     //Manejar el ataque
                     Console.WriteLine("You attack");
                     break;
+                case "joingame":
+                    JoinOngoingGame();
+                    break;
                 case "signup":
                     SignupRoutine();
-
                     break;
                 case "login":
                     LoginRoutine();
@@ -180,6 +179,32 @@ namespace SlasherClient
                     Console.WriteLine("Invalid input");
                     return;
             }
+        }
+
+        private static void JoinOngoingGame()
+        {
+            if (loggedIn)
+            {
+                Console.WriteLine();
+                Console.WriteLine("Choose your side!");
+                Console.WriteLine("-- Survivors --\nSurvive as a team, play as a team and die as a team. Cooperation is key to survive the hordes of monsters. Reduced health and attack but you can gang up on monsters with the help of other survivors. Defeat all of them and the whole team wins!");
+                Console.WriteLine("-- Monsters --\nTo each his own. In this dog eat dog world only the biggest, meanest monsters survive. Feast on measly survivors and surpass other monsters to win! Higher health and attack but there can only be one winner! Good luck!");
+                string choice = string.Empty;
+                while (choice != "s" && choice != "m")
+                {
+                    Console.WriteLine();
+                    Console.WriteLine("Your choice? (S/M)");
+                    choice = Console.ReadLine().ToLower();
+                }
+
+                SendMessageToServer(serverConnection, string.Format("joingame#{0}", choice));
+            }
+            else
+            {
+                Console.WriteLine();
+                Console.WriteLine("You need to be logged in to the server to perform that action.");
+            }
+
         }
 
         private static void LogoutRoutine()
@@ -215,7 +240,7 @@ namespace SlasherClient
             while (string.IsNullOrEmpty(photoRoute))
             {
                 Console.WriteLine(errorMsg);
-                Console.WriteLine("Enter the your avatar route:");
+                Console.WriteLine("Enter your avatar's route:");
                 photoRoute = Console.ReadLine();
 
 

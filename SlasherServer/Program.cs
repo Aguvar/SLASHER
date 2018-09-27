@@ -1,4 +1,6 @@
 ﻿using SlasherServer.Authentication;
+using SlasherServer.Game;
+using SlasherServer.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -15,19 +17,21 @@ namespace SlasherServer
 {
     class Program
     {
+        private static List<User> users;
+        private static Dictionary<Guid, User> loggedUsers;
+        private static Dictionary<Guid, Socket> activeConnections;
 
-
-        //private const string IpString = "192.168.0.50";
-
-        private static List<User> Users;
-        private static Dictionary<Guid, User> LoggedUsers;
+        private static GameHandler game;
 
         static void Main(string[] args)
         {
             string ipString = ConfigurationManager.AppSettings["ipaddress"];
 
-            Users = new List<User>();
-            LoggedUsers = new Dictionary<Guid, User>();
+            game = new GameHandler();
+
+            users = new List<User>();
+            loggedUsers = new Dictionary<Guid, User>();
+            activeConnections = new Dictionary<Guid, Socket>();
 
             Console.WriteLine("---Slasher Server V.0.01---");
             Console.WriteLine();
@@ -79,44 +83,102 @@ namespace SlasherServer
                     Console.WriteLine("List all commands");
                     break;
                 case "listusers":
-                    foreach (var user in Users)
+                    foreach (var user in users)
                     {
                         Console.WriteLine(user.Nickname);
                     }
                     break;
                 case "listloggedusers":
-                    foreach (var pair in LoggedUsers)
+                    foreach (var pair in loggedUsers)
                     {
                         Console.WriteLine(pair.Value.Nickname);
                     }
+                    break;
+                case "startmatch":
+                    StartMatch();
                     break;
                 default:
                     break;
             }
         }
 
+        private static void StartMatch()
+        {
+            Console.WriteLine("Starting match!");
+
+            BroadcastMessage("A new game is starting, fight for your lives!");
+
+            game.StartGame();
+
+            while (!game.IsOver())
+            {
+                Thread.Sleep(200);
+            }
+
+            game.EndGame();
+
+            BroadcastMessage("\nThe match has ended! ");
+
+            switch (game.Result)
+            {
+                case "S":
+                    BroadcastMessage("Survivors win!");
+                    break;
+                case "M":
+                    //Obtener cual monstruo gano
+                    List<IPlayer> winner = game.GetWinners();
+                    BroadcastMessage(string.Format("Monster {0} wins!", winner[0].Id));
+                    break;
+                default:
+
+                    BroadcastMessage("/nNobody wins! Everyone loses! \n\nGit gud guys come on :^)");
+                    break;
+            }
+        }
+
+        private static void BroadcastMessage(string message)
+        {
+            foreach (Socket connection in activeConnections.Values)
+            {
+                string printCommand = string.Format("consoleprint#{0}", message);
+                SendMessageToClient(connection, printCommand);
+            }
+        }
+
         private static void HandleClientConnection(Socket clientConnection)
         {
+            bool connectionActive = true;
             Guid socketId = Guid.NewGuid();
+            activeConnections.Add(socketId, clientConnection);
 
-            while (true)
+            while (connectionActive)
             {
-                var msgLength = new byte[4];
-                clientConnection.Receive(msgLength);
-
-                int msgLengthInt = BitConverter.ToInt32(msgLength, 0);
-                var msgBytes = new byte[msgLengthInt];
-                clientConnection.Receive(msgBytes);
-                //Console.WriteLine(Encoding.ASCII.GetString(msgBytes));
-                string message = Encoding.ASCII.GetString(msgBytes);
-
-                string response = ParseClientMessage(message, socketId, clientConnection);
-
-                if (!string.IsNullOrWhiteSpace(response))
+                try
                 {
-                    SendMessageToClient(clientConnection, response);
+                    var msgLength = new byte[4];
+                    clientConnection.Receive(msgLength);
+
+                    int msgLengthInt = BitConverter.ToInt32(msgLength, 0);
+                    var msgBytes = new byte[msgLengthInt];
+
+                    clientConnection.Receive(msgBytes);
+
+                    string message = Encoding.ASCII.GetString(msgBytes);
+
+                    string response = ParseClientMessage(message, socketId, clientConnection);
+
+                    if (!string.IsNullOrWhiteSpace(response))
+                    {
+                        SendMessageToClient(clientConnection, response);
+                    }
+                }
+                catch (SocketException)
+                {
+                    connectionActive = false;
                 }
             }
+
+            Console.WriteLine(string.Format("Connection with client {0} has been terminated.", socketId.ToString()));
         }
 
         private static string ParseClientMessage(string message, Guid socketId, Socket clientConnection)
@@ -130,7 +192,7 @@ namespace SlasherServer
                     string currentDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
                     string avatarRoute = Path.Combine(currentDir, string.Format("Avatars/{0}Avatar.{1}", commandArray[1], commandArray[2]));
 
-                    Users.Add(new User()
+                    users.Add(new User()
                     {
                         Nickname = commandArray[1],
                         AvatarRoute = avatarRoute
@@ -143,7 +205,7 @@ namespace SlasherServer
                         long imagePiecesLong = BitConverter.ToInt64(imagePieces, 0);
                         int piecesReceived = 0;
                         int bytesReceived = 0;
-                        while (piecesReceived < imagePiecesLong )
+                        while (piecesReceived < imagePiecesLong)
                         {
                             //Aca tenemos que hacer un while, para que vaya recibiendo las piezas de la imagen que pesan cada una a lo sumo 1024 bytes.
                             byte[] msgLength = new byte[4];
@@ -160,18 +222,17 @@ namespace SlasherServer
                             bytesReceived += msgBytes.Length;
                             piecesReceived++;
                         }
-                        //stream.Flush();
                     }
 
                     return string.Format("consoleprint#User {0} was registered!", commandArray[1]);
                 case "login":
                     string nickname = commandArray[1];
-                    if (Users.Any(u => u.Nickname.Equals(nickname)))
+                    if (users.Any(u => u.Nickname.Equals(nickname)))
                     {
-                        if (!LoggedUsers.Any(u => u.Value.Nickname.Equals(nickname)))
+                        if (!loggedUsers.Any(u => u.Value.Nickname.Equals(nickname)))
                         {
-                            User userToLog = Users.Where(u => u.Nickname.Equals(nickname)).First();
-                            LoggedUsers.Add(socketId, userToLog);
+                            User userToLog = users.Where(u => u.Nickname.Equals(nickname)).First();
+                            loggedUsers.Add(socketId, userToLog);
                             return "loggedin";
                         }
                         else
@@ -184,14 +245,51 @@ namespace SlasherServer
                         return "consoleprint#The nickname does not exist";
                     }
                 case "logout":
-                    if (LoggedUsers.ContainsKey(socketId))
+                    if (loggedUsers.ContainsKey(socketId))
                     {
-                        LoggedUsers.Remove(socketId);
+                        loggedUsers.Remove(socketId);
                         return "loggedout";
                     }
                     else
                     {
                         return "consoleprint#You are not logged in, willy nilly";
+                    }
+                case "joingame":
+                    if (game.MatchOngoing)
+                    {
+                        if (!game.IsGameFull())
+                        {
+                            IPlayer player;
+
+                            switch (commandArray[1])
+                            {
+                                case "s":
+                                    player = new Survivor()
+                                    {
+                                        Id = socketId
+                                    };
+                                    break;
+                                case "m":
+                                    player = new Monster()
+                                    {
+                                        Id = socketId
+                                    };
+                                    break;
+                                default:
+                                    throw new InvalidOperationException("Something weird happened and I'm not really sure what to do. Player type argument was not in the expected values.");
+                            }
+                            game.AddPlayer(player);
+
+                            return "consoleprint#Game joined! Enjoy!";
+                        }
+                        else
+                        {
+                            return "consoleprint#The game is full now, should've joined earlier, bud.";
+                        }
+                    }
+                    else
+                    {
+                        return "consoleprint#Hold your horses please, the match hasn't started yet.";
                     }
                 default:
                     return "";
