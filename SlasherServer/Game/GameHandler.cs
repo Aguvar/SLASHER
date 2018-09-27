@@ -1,6 +1,7 @@
 ﻿using SlasherServer.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,11 +16,19 @@ namespace SlasherServer.Game
         private const int BOARD_SIZE = 8;
         private const int MAX_CAPACITY = 15;
 
+        private Stopwatch matchTimer;
+
+        public bool MatchOngoing { get; private set; }
+
+        public string Result { get; internal set; }
 
         public GameHandler()
         {
+            matchTimer = new Stopwatch();
             gameBoard = new IPlayer[BOARD_SIZE, BOARD_SIZE];
             players = new List<IPlayer>();
+
+            
         }
 
         public void Attack(IPlayer playerWhoAttacks)
@@ -27,7 +36,7 @@ namespace SlasherServer.Game
             Position playerPosition = GetPlayerPosition(playerWhoAttacks);
             if (playerPosition != null)
             {
-                AttackNeighbours(playerPosition, playerWhoAttacks.AttackDamage());
+                AttackNeighbours(playerPosition, playerWhoAttacks.AttackDamage);
             }
         }
         
@@ -124,6 +133,83 @@ namespace SlasherServer.Game
                 output += "\n";
             }
             return output;
+        }
+
+        internal void StartGame()
+        {
+            MatchOngoing = true;
+            matchTimer.Start();
+        }
+
+        /// <summary>
+        /// Cleans up the game and calculates who the winner is and makes all necessary information available on properties
+        /// </summary>
+        internal void EndGame()
+        {
+            MatchOngoing = false;
+            matchTimer.Stop();
+        }
+
+        internal bool IsOver()
+        {
+            long currentMatchTime = matchTimer.ElapsedMilliseconds;
+
+            //180 seconds = 180000 milliseconds
+
+            if (currentMatchTime > 180000)
+            {
+                return true;
+            }
+            else if (currentMatchTime > 60000)
+            {
+                return OnlySurvivorsAlive() || OnlyOneMonsterRemains();
+            }
+            return false;
+        }
+
+        private bool OnlyOneMonsterRemains()
+        {
+            bool monsterFound = false;
+
+            for (int x = 0; x < BOARD_SIZE; x++)
+            {
+                for (int y = 0; y < BOARD_SIZE; y++)
+                {
+                    if (gameBoard[x, y] != null && gameBoard[x, y].Health > 0)
+                    {
+                        if (gameBoard[x, y].Type() == 'S' || monsterFound)
+                        {
+                            return false;
+                        }
+                        else
+                        {
+                            monsterFound = true;
+                        }
+                    }
+                }
+            }
+
+            return monsterFound;
+        }
+
+        private bool OnlySurvivorsAlive()
+        {
+            for (int x = 0; x < BOARD_SIZE; x++)
+            {
+                for (int y = 0; y < BOARD_SIZE; y++)
+                {
+                    if (gameBoard[x,y] != null && gameBoard[x,y].Type() == 'M' && gameBoard[x,y].Health > 0)
+                    {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        internal List<IPlayer> GetWinners()
+        {
+            throw new NotImplementedException();
         }
     }
 }
