@@ -263,12 +263,12 @@ namespace SlasherClient
                 int piecesPointer = 0;
                 while (piecesPointer < 8)
                 {
-                    var sent = serverConnection.Send(bytePieces, piecesPointer, 8 - piecesPointer, SocketFlags.None);
-                    if (sent == 0)
+                    var sentBytes = serverConnection.Send(bytePieces, piecesPointer, 8 - piecesPointer, SocketFlags.None);
+                    if (sentBytes == 0)
                     {
                         throw new SocketException();
                     }
-                    piecesPointer += sent;
+                    piecesPointer += sentBytes;
                 }
 
                 byte[] imageBuffer = new byte[1024];
@@ -279,22 +279,22 @@ namespace SlasherClient
                     byte[] byteLength = BitConverter.GetBytes(length);
                     while (posLength < 4)
                     {
-                        var sent = serverConnection.Send(byteLength, posLength, 4 - posLength, SocketFlags.None);
-                        if (sent == 0)
+                        var sentBytes = serverConnection.Send(byteLength, posLength, 4 - posLength, SocketFlags.None);
+                        if (sentBytes == 0)
                         {
                             throw new SocketException();
                         }
-                        posLength += sent;
+                        posLength += sentBytes;
                     }
                     var pos = 0;
                     while (pos < length)
                     {
-                        var sent = serverConnection.Send(imageBuffer, pos, length - pos, SocketFlags.None);
-                        if (sent == 0)
+                        var sentBytes = serverConnection.Send(imageBuffer, pos, length - pos, SocketFlags.None);
+                        if (sentBytes == 0)
                         {
                             throw new SocketException();
                         }
-                        pos += sent;
+                        pos += sentBytes;
                     }
                 }
             }
