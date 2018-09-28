@@ -27,8 +27,6 @@ namespace SlasherServer.Game
             matchTimer = new Stopwatch();
             gameBoard = new IPlayer[BOARD_SIZE, BOARD_SIZE];
             players = new List<IPlayer>();
-
-            
         }
 
         public void Attack(IPlayer playerWhoAttacks)
@@ -40,11 +38,27 @@ namespace SlasherServer.Game
             }
         }
         
+        public bool Move(IPlayer player, Position deltaPosition)
+        {
+            Position currentPosition = GetPlayerPosition(player);
+            Position nextPosition = new Position(currentPosition.Row + deltaPosition.Row, currentPosition.Col + deltaPosition.Col);
+            if(nextPosition.Row >= 0 && nextPosition.Row < BOARD_SIZE && nextPosition.Col >= 0 && nextPosition.Col < BOARD_SIZE)
+            {
+                if (gameBoard[nextPosition.Row, nextPosition.Col] == null)
+                {
+                    gameBoard[currentPosition.Row, currentPosition.Col] = null;
+                    gameBoard[nextPosition.Row, nextPosition.Col] = player;
+                    return true;
+                }
+            }
+            return false;
+        }
+
         public bool IsGameFull()
         {
-            return players.Count <= MAX_CAPACITY;
+            return players.Count == MAX_CAPACITY;
         }
-        
+
         public void AddPlayer(IPlayer player)
         {
             Position position = GetRandomUnoccupiedPosition();
@@ -57,10 +71,10 @@ namespace SlasherServer.Game
             Random r = new Random();
             int row = r.Next(0, BOARD_SIZE - 1);
             int col = r.Next(0, BOARD_SIZE - 1);
-            while(gameBoard[row, col] != null)
+            while (gameBoard[row, col] != null)
             {
                 row = r.Next(0, BOARD_SIZE - 1);
-                col = r.Next(0, BOARD_SIZE - 1);                
+                col = r.Next(0, BOARD_SIZE - 1);
             }
             return new Position(row, col);
         }
@@ -74,13 +88,13 @@ namespace SlasherServer.Game
 
             for (int row = minRow; row < maxRow; row++)
             {
-                for (int col = minCol; row < maxCol; col++)
+                for (int col = minCol; col < maxCol; col++)
                 {
                     IPlayer neighbour = gameBoard[row, col];
-                    if(neighbour != null)
+                    if (neighbour != null)
                     {
                         bool isKilled = neighbour.ReceiveDamage(damage);
-                        if(isKilled)
+                        if (isKilled)
                         {
                             //Delete player and disconnect client
                         }
@@ -89,13 +103,13 @@ namespace SlasherServer.Game
             }
         }
 
-        private Position GetPlayerPosition(IPlayer player)
+        public Position GetPlayerPosition(IPlayer player)
         {
-            for (int row = 0; row < gameBoard.Length; row++)
+            for (int row = 0; row < BOARD_SIZE; row++)
             {
-                for (int col = 0; row < gameBoard.Length; col++)
+                for (int col = 0; col < BOARD_SIZE; col++)
                 {
-                    if (gameBoard[row, col].Equals(player))
+                    if (gameBoard[row, col] != null && gameBoard[row, col].Equals(player))
                     {
                         return new Position(row, col);
                     }
@@ -104,34 +118,40 @@ namespace SlasherServer.Game
             return null;
         }
 
-        private string PrintPlayerSurroundings(Position position, int maxDistance)
+        public string GetPlayerSurroundings(Position position, int maxDistance)
         {
             string output = "";
-            int minRow = Math.Max(0, position.Row - maxDistance);
-            int maxRow = Math.Min(gameBoard.Length, position.Row + maxDistance);
-            int minCol = Math.Max(0, position.Col - maxDistance);
-            int maxCol = Math.Min(gameBoard.Length, position.Col + maxDistance);
 
-            for (int row = minRow; row < maxRow; row++)
+            for (int currentCol = position.Col - maxDistance; currentCol <= position.Col + maxDistance; currentCol++)
             {
-                for (int col = minCol; row < maxCol; col++)
+                for (int currentRow = position.Row - maxDistance; currentRow <= position.Row + maxDistance; currentRow++)
                 {
-                    IPlayer player = gameBoard[row, col];
-                    if (row == position.Row && col == position.Col)
+                    if (currentRow < 0 || currentRow > BOARD_SIZE - 1 || currentCol < 0 || currentCol > BOARD_SIZE - 1)
                     {
-                        output += " *";
-                    }
-                    else if (player == null)
-                    {
-                        output += " -";
+                        output += "X";
                     }
                     else
                     {
-                        output += " " + player.GetType();
+                        var currentPlayer = gameBoard[currentRow, currentCol];
+                        if (currentRow == position.Row && currentCol == position.Col)
+                        {
+                            output += "*";
+                        }
+                        else if (currentPlayer == null)
+                        {
+                            output += "-";
+                        }
+                        else
+                        {
+                            output += currentPlayer.GetType();
+                        }
                     }
+                    
+                    output += " ";
                 }
                 output += "\n";
             }
+
             return output;
         }
 
@@ -148,6 +168,12 @@ namespace SlasherServer.Game
         {
             MatchOngoing = false;
             matchTimer.Stop();
+            matchTimer.Reset();
+
+
+            //Put the winners where the winners should be
+
+            players.Clear();
         }
 
         internal bool IsOver()
@@ -198,7 +224,7 @@ namespace SlasherServer.Game
             {
                 for (int y = 0; y < BOARD_SIZE; y++)
                 {
-                    if (gameBoard[x,y] != null && gameBoard[x,y].Type() == 'M' && gameBoard[x,y].Health > 0)
+                    if (gameBoard[x, y] != null && gameBoard[x, y].Type() == 'M' && gameBoard[x, y].Health > 0)
                     {
                         return false;
                     }
@@ -211,5 +237,11 @@ namespace SlasherServer.Game
         {
             throw new NotImplementedException();
         }
+
+        public IPlayer GetPlayer(Guid id)
+        {
+            return players.FirstOrDefault<IPlayer>(p => p.Id.Equals(id));
+        }
+
     }
 }

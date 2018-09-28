@@ -9,11 +9,14 @@ namespace SlasherServer.Game
 {
     class Survivor : IPlayer
     {
-        public Guid Id { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        private Guid _id;
+        public Guid Id { get => _id; set => _id = value; }
+
         private int _health;
         public int Health { get => _health; set => _health = value; }
 
-        public int AttackDamage => 5;
+        private int _attackDamage = 5;
+        public int AttackDamage { get { return _attackDamage; } private set { _attackDamage = value; } }
 
         public Survivor()
         {
@@ -36,6 +39,18 @@ namespace SlasherServer.Game
         public char Type()
         {
             return 'S';
+        }
+
+        public override bool Equals(object player)
+        {
+            if (player is IPlayer)
+            {
+                return Id.Equals(((IPlayer)player).Id);
+            }
+            else
+            {
+                return false;
+            }
         }
     }
 }

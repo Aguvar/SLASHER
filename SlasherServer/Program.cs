@@ -94,7 +94,7 @@ namespace SlasherServer
                         Console.WriteLine(pair.Value.Nickname);
                     }
                     break;
-                case "startmatch":
+                case "startgame":
                     StartMatch();
                     break;
                 default:
@@ -117,7 +117,7 @@ namespace SlasherServer
 
             game.EndGame();
 
-            BroadcastMessage("\nThe match has ended! ");
+            BroadcastMessage("\nThe game has ended! ");
 
             switch (game.Result)
             {
@@ -130,7 +130,6 @@ namespace SlasherServer
                     BroadcastMessage(string.Format("Monster {0} wins!", winner[0].Id));
                     break;
                 default:
-
                     BroadcastMessage("/nNobody wins! Everyone loses! \n\nGit gud guys come on :^)");
                     break;
             }
@@ -279,8 +278,10 @@ namespace SlasherServer
                                     throw new InvalidOperationException("Something weird happened and I'm not really sure what to do. Player type argument was not in the expected values.");
                             }
                             game.AddPlayer(player);
+                            Position position = game.GetPlayerPosition(player);
+                            string surroundings = game.GetPlayerSurroundings(position, 1);
 
-                            return "consoleprint#Game joined! Enjoy!";
+                            return string.Format("consoleprint#{0}\n\n{1}", surroundings, "Game joined! Enjoy your stay!");
                         }
                         else
                         {
@@ -291,10 +292,59 @@ namespace SlasherServer
                     {
                         return "consoleprint#Hold your horses please, the match hasn't started yet.";
                     }
+                case "move":
+                    if (game.MatchOngoing)
+                    {
+                        IPlayer player = game.GetPlayer(socketId);
+                        if (player != null)
+                        {
+                            if (game.Move(player, ParsePlayerMovement(commandArray[1])))
+                            {
+                                Position position = game.GetPlayerPosition(player);
+                                return string.Format("consoleprint#{0}",game.GetPlayerSurroundings(position,1));
+                            }
+                            else
+                            {
+                                Position position = game.GetPlayerPosition(player);
+                                return string.Format("consoleprint#{0}\n{1}", game.GetPlayerSurroundings(position, 1), "Your way was blocked by something.");
+                            }
+
+                        }
+                    }
+                    break;
+                case "attack":
+
+                    break;
                 default:
                     return "";
             }
             throw new InvalidOperationException("An unknown command was received.");
+        }
+
+        private static Position ParsePlayerMovement(string movementString)
+        {
+            Position movement = new Position(0, 0);
+            foreach (char direction in movementString.ToLower())
+            {
+                switch (direction)
+                {
+                    case 'w':
+                        movement.Col += 1;
+                        break;
+                    case 's':
+                        movement.Col -= 1;
+                        break;
+                    case 'a':
+                        movement.Row -= 1;
+                        break;
+                    case 'd':
+                        movement.Row += 1;
+                        break;
+                    default:
+                        break;
+                }
+            }
+            return movement;
         }
 
         private static void SendMessageToClient(Socket clientConnection, string message)

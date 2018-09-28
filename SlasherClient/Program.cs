@@ -13,10 +13,10 @@ namespace SlasherClient
 {
     class Program
     {
-        private const string UP_MOVEMENT_ARG = "N";
-        private const string LEFT_MOVEMENT_ARG = "W";
-        private const string RIGHT_MOVEMENT_ARG = "E";
-        private const string DOWN_MOVEMENT_ARG = "S";
+        private const string UP_MOVEMENT_ARG = "w";
+        private const string LEFT_MOVEMENT_ARG = "a";
+        private const string RIGHT_MOVEMENT_ARG = "d";
+        private const string DOWN_MOVEMENT_ARG = "s";
         private const string ATTACK_COMMAND = "attack";
         private const string MOVE_COMMAND = "move";
 
@@ -140,28 +140,32 @@ namespace SlasherClient
             switch (command[0])
             {
                 case MOVE_COMMAND:
-                    //Manejar el movimiento
+                    string commandToSend = "move";
                     for (int i = 1; i < command.Length; i++)
                     {
                         switch (command[i])
                         {
                             case UP_MOVEMENT_ARG:
+                                commandToSend +=  UP_MOVEMENT_ARG;
                                 break;
                             case LEFT_MOVEMENT_ARG:
+                                commandToSend +=  LEFT_MOVEMENT_ARG;
                                 break;
                             case RIGHT_MOVEMENT_ARG:
+                                commandToSend += RIGHT_MOVEMENT_ARG;
                                 break;
                             case DOWN_MOVEMENT_ARG:
+                                commandToSend += DOWN_MOVEMENT_ARG;
                                 break;
                             default:
                                 Console.WriteLine("Invalid input");
                                 return;
                         }
                     }
+                    SendMessageToServer(serverConnection, commandToSend);
                     break;
                 case ATTACK_COMMAND:
-                    //Manejar el ataque
-                    Console.WriteLine("You attack");
+                    SendMessageToServer(serverConnection, "attack");
                     break;
                 case "joingame":
                     JoinOngoingGame();

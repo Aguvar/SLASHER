@@ -9,8 +9,8 @@ namespace SlasherServer.Game
 {
     public class Monster : IPlayer
     {
-
-        public Guid Id { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        private Guid _id;
+        public Guid Id { get => _id; set => _id = value; }
 
         private int _health = 100;
         public int Health { get => _health; set => _health = value; }
@@ -22,24 +22,35 @@ namespace SlasherServer.Game
         {
             this.Health = 100;
         }
-        
-             
-        
+
         public bool ReceiveDamage(int damage)
         {
             this.Health -= damage;
-            if(this.Health <= 0)
+            if (this.Health <= 0)
             {
                 return true;
-            } else
+            }
+            else
             {
                 return false;
             }
         }
-        
+
         public char Type()
         {
             return 'M';
+        }
+
+        public override bool Equals(object player)
+        {
+            if (player is IPlayer)
+            {
+                return Id.Equals(((IPlayer)player).Id);
+            }
+            else
+            {
+                return false;
+            }
         }
     }
 }
