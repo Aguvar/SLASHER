@@ -17,12 +17,6 @@ namespace SlasherServer
 {
     class Program
     {
-        private static List<User> users;
-        private static Dictionary<Guid, User> loggedUsers;
-        private static Dictionary<Guid, Socket> activeConnections;
-
-        private static GameHandler game;
-
         static void Main(string[] args)
         {
             string ipString = ConfigurationManager.AppSettings["ipaddress"];
