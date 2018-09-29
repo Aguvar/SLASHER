@@ -14,11 +14,11 @@ namespace SlasherServer
 {
     public class ServerController
     {
-        public static GameHandler Game;
+        public static GameHandler game;
 
         public ServerController()
         {
-            Game = new GameHandler();
+            game = new GameHandler();
         }
 
         public void StartServer(string ipString, int listenPort)
@@ -69,25 +69,25 @@ namespace SlasherServer
 
             ClientHandler.BroadcastMessage("A new game is starting, fight for your lives!");
 
-            Game.StartGame();
+            game.StartGame();
 
-            while (!Game.IsOver())
+            while (!game.IsOver())
             {
                 Thread.Sleep(200);
             }
 
-            Game.EndGame();
+            game.EndGame();
 
             ClientHandler.BroadcastMessage("\nThe game has ended! ");
 
-            switch (Game.Result)
+            switch (game.Result)
             {
                 case "S":
                     ClientHandler.BroadcastMessage("Survivors win!");
                     break;
                 case "M":
                     //Obtener cual monstruo gano
-                    List<IPlayer> winner = Game.GetWinners();
+                    List<IPlayer> winner = game.GetWinners();
                     ClientHandler.BroadcastMessage(string.Format("Monster {0} wins!", winner[0].Id));
                     break;
                 default:

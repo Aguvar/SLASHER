@@ -321,7 +321,7 @@ namespace SlasherServer
 
         private static GameHandler GetGame()
         {
-            return ServerController.Game;
+            return ServerController.game;
         }
     }
 }
