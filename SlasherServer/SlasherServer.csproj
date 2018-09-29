@@ -44,6 +44,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Authentication\User.cs" />
+    <Compile Include="ClientHandler.cs" />
     <Compile Include="Game\GameHandler.cs" />
     <Compile Include="Game\Monster.cs" />
     <Compile Include="Game\Survivor.cs" />
@@ -51,6 +52,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Game\Position.cs" />
+    <Compile Include="ServerController.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

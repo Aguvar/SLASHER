@@ -1,17 +1,5 @@
-﻿using SlasherServer.Authentication;
-using SlasherServer.Game;
-using SlasherServer.Interfaces;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Configuration;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.Sockets;
-using System.Reflection;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace SlasherServer
 {
