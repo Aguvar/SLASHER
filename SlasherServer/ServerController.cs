@@ -2,6 +2,7 @@ using SlasherServer.Game;
 using SlasherServer.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -63,6 +64,7 @@ namespace SlasherServer
 
         private static void StartMatch()
         {
+            Console.WriteLine();
             Console.WriteLine("Starting match!");
 
             ClientHandler.BroadcastMessage("A new game is starting, fight for your lives!");
@@ -78,15 +80,30 @@ namespace SlasherServer
 
             ClientHandler.BroadcastMessage("\nThe game has ended! ");
 
+            List<IPlayer> winners = game.GetWinners();
+
             switch (game.MatchResult)
             {
-                case "S":
+                case "s":
                     ClientHandler.BroadcastMessage("Survivors win!");
+                    ClientHandler.BroadcastMessage("These are the brave warriors who survived:");
+                    foreach (var winner in winners)
+                    {
+                        if (ClientHandler.LoggedUsers.Keys.Contains(winner.Id))
+                        {
+                            var name = ClientHandler.LoggedUsers[winner.Id].Nickname;
+                            ClientHandler.BroadcastMessage(name);
+                        }
+                    }
                     break;
-                case "M":
+                case "m":
                     //Obtener cual monstruo gano
-                    List<IPlayer> winner = game.GetWinners();
-                    ClientHandler.BroadcastMessage(string.Format("Monster {0} wins!", winner[0].Id));
+                    var monsterName = "X";
+                    if (ClientHandler.LoggedUsers.Keys.Contains(winners[0].Id))
+                    {
+                        monsterName = ClientHandler.LoggedUsers[winners[0].Id].Nickname;
+                    }
+                    ClientHandler.BroadcastMessage(string.Format("Monster {0} wins!", monsterName));
                     break;
                 default:
                     ClientHandler.BroadcastMessage("/nNobody wins! Everyone loses! \n\nGit gud guys come on :^)");
