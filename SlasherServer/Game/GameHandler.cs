@@ -16,15 +16,23 @@ namespace SlasherServer.Game
 
         private Stopwatch matchTimer;
 
+        private object matchJoinLock;
+        private object movePlayerLock;
+        private object attackPlayerLock;
+
         public bool MatchOngoing { get; private set; }
 
-        public string Result { get; internal set; }
+        public string MatchResult { get; internal set; }
+        public List<IPlayer> Winners { get; private set; }
 
         public GameHandler()
         {
             matchTimer = new Stopwatch();
             gameBoard = new IPlayer[BOARD_SIZE, BOARD_SIZE];
             players = new List<IPlayer>();
+            matchJoinLock = new object();
+            movePlayerLock = new object();
+            attackPlayerLock = new object();
         }
 
         public void ExecutePlayerAttack(IPlayer playerWhoAttacks)
@@ -36,7 +44,7 @@ namespace SlasherServer.Game
                 {
                     for (int currentCol = playerPosition.Col - 1; currentCol <= playerPosition.Col + 1; currentCol++)
                     {
-                        if (!PositionOutOfBounds(currentCol,currentRow) && gameBoard[currentRow,currentCol] != null && !(currentRow == playerPosition.Row && currentCol == playerPosition.Col))
+                        if (!PositionOutOfBounds(currentCol, currentRow) && gameBoard[currentRow, currentCol] != null && !(currentRow == playerPosition.Row && currentCol == playerPosition.Col))
                         {
                             IPlayer target = gameBoard[currentRow, currentCol];
                             target.ReceiveDamageFrom(playerWhoAttacks);
@@ -48,18 +56,21 @@ namespace SlasherServer.Game
 
         public bool Move(IPlayer player, Position deltaPosition)
         {
-            Position currentPosition = GetPlayerPosition(player);
-            Position nextPosition = new Position(currentPosition.Row + deltaPosition.Row, currentPosition.Col + deltaPosition.Col);
-            if (nextPosition.Row >= 0 && nextPosition.Row < BOARD_SIZE && nextPosition.Col >= 0 && nextPosition.Col < BOARD_SIZE)
+            lock (movePlayerLock)
             {
-                if (gameBoard[nextPosition.Row, nextPosition.Col] == null)
+                Position currentPosition = GetPlayerPosition(player);
+                Position nextPosition = new Position(currentPosition.Row + deltaPosition.Row, currentPosition.Col + deltaPosition.Col);
+                if (nextPosition.Row >= 0 && nextPosition.Row < BOARD_SIZE && nextPosition.Col >= 0 && nextPosition.Col < BOARD_SIZE)
                 {
-                    gameBoard[currentPosition.Row, currentPosition.Col] = null;
-                    gameBoard[nextPosition.Row, nextPosition.Col] = player;
-                    return true;
+                    if (gameBoard[nextPosition.Row, nextPosition.Col] == null)
+                    {
+                        gameBoard[currentPosition.Row, currentPosition.Col] = null;
+                        gameBoard[nextPosition.Row, nextPosition.Col] = player;
+                        return true;
+                    }
                 }
+                return false;
             }
-            return false;
         }
 
         public bool IsGameFull()
@@ -69,9 +80,15 @@ namespace SlasherServer.Game
 
         public void AddPlayer(IPlayer player)
         {
-            Position position = GetRandomUnoccupiedPosition();
-            gameBoard[position.Row, position.Col] = player;
-            players.Add(player);
+            lock (matchJoinLock)
+            {
+                lock (movePlayerLock)
+                {
+                    Position position = GetRandomUnoccupiedPosition();
+                    gameBoard[position.Row, position.Col] = player;
+                    players.Add(player);
+                }
+            }
         }
 
         private Position GetRandomUnoccupiedPosition()
@@ -159,10 +176,29 @@ namespace SlasherServer.Game
             matchTimer.Stop();
             matchTimer.Reset();
 
+            Winners = players.Where(p => p.Health > 0).ToList();
 
-            //Put the winners where the winners should be
+            if (OnlySurvivorsAlive())
+            {
+                MatchResult = "s";
+            }
+            else if (OnlyOneMonsterRemains())
+            {
+                MatchResult = "m";
+            }
+            else
+            {
+                MatchResult = "x";
+            }
 
             players.Clear();
+            for (int x = 0; x < BOARD_SIZE; x++)
+            {
+                for (int y = 0; y < BOARD_SIZE; y++)
+                {
+                    gameBoard[x, y] = null;
+                }
+            }
         }
 
         internal bool IsOver()

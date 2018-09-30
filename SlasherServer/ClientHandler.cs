@@ -18,11 +18,17 @@ namespace SlasherServer
         public static Dictionary<Guid, User> LoggedUsers { get; set; }
         public static Dictionary<Guid, Socket> ActiveConnections { get; set; }
 
+        private static object loginLock;
+        private static object signupLock;
+
         public static void Initialize()
         {
             Users = new List<User>();
             LoggedUsers = new Dictionary<Guid, User>();
             ActiveConnections = new Dictionary<Guid, Socket>();
+
+            loginLock = new object();
+            signupLock = new object();
         }
 
         public static void ListenForConnections(Socket serverSocket)
@@ -146,9 +152,13 @@ namespace SlasherServer
         {
             GameHandler game = GetGame();
 
-            game.ExecutePlayerAttack(game.GetPlayerById(socketId));
+            var response = "consoleprint#{0}";
 
-            return "";
+            IPlayer playerWhoAttacks = game.GetPlayerById(socketId);
+
+            game.ExecutePlayerAttack(playerWhoAttacks);
+
+            return string.Format(response, GetPlayerStatusString(playerWhoAttacks));
         }
 
         private static string SignUpUser(Socket clientConnection, string nickname, string imageFormat)
@@ -156,11 +166,19 @@ namespace SlasherServer
             string currentExecutionDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             string avatarRoute = Path.Combine(currentExecutionDir, string.Format("Avatars/{0}Avatar.{1}", nickname, imageFormat));
 
-            Users.Add(new User()
+            lock (signupLock)
             {
-                Nickname = nickname,
-                AvatarRoute = avatarRoute
-            });
+                if (Users.Exists(u => u.Nickname.Equals(nickname)))
+                {
+                    return string.Format("consoleprint#User {0} is already registered");
+                }
+
+                Users.Add(new User()
+                {
+                    Nickname = nickname,
+                    AvatarRoute = avatarRoute
+                }); 
+            }
 
             using (FileStream stream = new FileStream(avatarRoute, FileMode.Create))
             {
@@ -193,22 +211,25 @@ namespace SlasherServer
 
         private static string LogIn(Socket clientConnection, Guid socketId, string firstCommand)
         {
-            if (Users.Any(u => u.Nickname.Equals(firstCommand)))
+            lock (loginLock)
             {
-                if (!LoggedUsers.Any(u => u.Value.Nickname.Equals(firstCommand)))
+                if (Users.Any(u => u.Nickname.Equals(firstCommand)))
                 {
-                    User userToLog = Users.Where(u => u.Nickname.Equals(firstCommand)).First();
-                    LoggedUsers.Add(socketId, userToLog);
-                    return "loggedin";
+                    if (!LoggedUsers.Any(u => u.Value.Nickname.Equals(firstCommand)))
+                    {
+                        User userToLog = Users.Where(u => u.Nickname.Equals(firstCommand)).First();
+                        LoggedUsers.Add(socketId, userToLog);
+                        return "loggedin";
+                    }
+                    else
+                    {
+                        return "consoleprint#The user is already logged in, please select another user";
+                    }
                 }
                 else
                 {
-                    return "consoleprint#The user is already logged in, please select another firstCommand";
-                }
-            }
-            else
-            {
-                return "consoleprint#The firstCommand does not exist";
+                    return "consoleprint#The user does not exist";
+                } 
             }
         }
 
@@ -281,12 +302,12 @@ namespace SlasherServer
                     if (game.Move(player, ParsePlayerMovement(movements)))
                     {
                         Position position = game.GetPlayerPosition(player);
-                        return string.Format("consoleprint#{0}\nCurrent Health: {1}", game.GetPlayerSurroundings(position, 1), player.Health);
+                        return string.Format("consoleprint#{0}", GetPlayerStatusString(player));
                     }
                     else
                     {
                         Position position = game.GetPlayerPosition(player);
-                        return string.Format("consoleprint#{0}\n{1}", game.GetPlayerSurroundings(position, 1), "Your way was blocked by something.");
+                        return string.Format("consoleprint#{0}\n{1}", GetPlayerStatusString(player), "Your way was blocked by something.");
                     }
                 }
                 else
@@ -295,6 +316,12 @@ namespace SlasherServer
                 }
             }
             return string.Format("consoleprint#{0}", "There is no ongoing game.");
+        }
+
+        private static string GetPlayerStatusString(IPlayer player)
+        {
+            var game = GetGame();
+            return string.Format("{0}\nCurrent Health: {1}", game.GetPlayerSurroundings(game.GetPlayerPosition(player),1),player.Health);
         }
 
         private static Position ParsePlayerMovement(string movementString)

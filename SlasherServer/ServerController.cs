@@ -78,7 +78,7 @@ namespace SlasherServer
 
             ClientHandler.BroadcastMessage("\nThe game has ended! ");
 
-            switch (game.Result)
+            switch (game.MatchResult)
             {
                 case "S":
                     ClientHandler.BroadcastMessage("Survivors win!");
