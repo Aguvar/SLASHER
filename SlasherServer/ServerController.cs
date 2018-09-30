@@ -12,6 +12,8 @@ namespace SlasherServer
     public class ServerController
     {
         public static GameHandler game;
+        private static bool terminateConsole = false;
+        private Socket listeningSocket;
 
         public ServerController()
         {
@@ -22,6 +24,7 @@ namespace SlasherServer
         {
             var serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             serverSocket.Bind(new IPEndPoint(IPAddress.Parse(ipString), listenPort));
+            listeningSocket = serverSocket;
             serverSocket.Listen(25);
 
             ClientHandler.Initialize();
@@ -30,6 +33,14 @@ namespace SlasherServer
             receiveClientsThread.Start();
 
             ListenForCommands();
+
+            listeningSocket.Close();
+
+            Console.WriteLine();
+            Console.WriteLine("The console will now terminate");
+            Console.WriteLine();
+            Console.WriteLine("Press any key to continue...");
+            Console.ReadKey();
         }
 
         private static void ListenForCommands()
@@ -52,7 +63,7 @@ namespace SlasherServer
             Console.WriteLine("Console startup completed!");
             Console.WriteLine("Type \"Help\" to list all available commands");
 
-            while (true)
+            while (!terminateConsole)
             {
                 Console.WriteLine();
                 Console.WriteLine("Enter a command, please:");
@@ -106,7 +117,7 @@ namespace SlasherServer
                     ClientHandler.BroadcastMessage(string.Format("Monster {0} wins!", monsterName));
                     break;
                 default:
-                    ClientHandler.BroadcastMessage("/nNobody wins! Everyone loses! \n\nGit gud guys come on :^)");
+                    ClientHandler.BroadcastMessage("\nNobody wins! Everyone loses! \n\nGit gud guys come on :^)");
                     break;
             }
         }
@@ -133,9 +144,23 @@ namespace SlasherServer
                 case "startgame":
                     StartMatch();
                     break;
+                case "exit":
+                    ExitRoutine();
+                    break;
                 default:
                     break;
             }
+        }
+
+        private static void ExitRoutine()
+        {
+            ClientHandler.BroadcastMessage("The server is closing");
+
+            foreach (var connection in ClientHandler.ActiveConnections.Values)
+            {
+                connection.Close();
+            }
+            terminateConsole = true;
         }
     }
 

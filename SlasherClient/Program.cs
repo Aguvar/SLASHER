@@ -10,17 +10,38 @@ namespace SlasherClient
             string ipString = ConfigurationManager.AppSettings["ipaddress"];
             string serverIpAddress = ConfigurationManager.AppSettings["serveripaddress"];
 
-            Console.WriteLine("---Slasher Client V.0.01---");
-            Console.WriteLine();
+            Console.WriteLine("---Slasher Client V0.01---");
 
-            Console.WriteLine("Enter the port to bind the client to:");
-            int clientPort = Int32.Parse(Console.ReadLine());
+            Console.WriteLine(" _______  _        _______  _______           _______  _______ " );
+            Console.WriteLine("(  ____ \\( \\      (  ___  )(  ____ \\|\\     /|(  ____ \\(  ____ )" );
+            Console.WriteLine("| (    \\/| (      | (   ) || (    \\/| )   ( || (    \\/| (    )|" );
+            Console.WriteLine("| (_____ | |      | (___) || (_____ | (___) || (__    | (____)|" );
+            Console.WriteLine("(_____  )| |      |  ___  |(_____  )|  ___  ||  __)   |     __)" );
+            Console.WriteLine("      ) || |      | (   ) |      ) || (   ) || (      | (\\ (   " );
+            Console.WriteLine("/\\____) || (____/\\| )   ( |/\\____) || )   ( || (____/\\| ) \\ \\__" );
+            Console.WriteLine("\\_______)(_______/|/     \\|\\_______)|/     \\|(_______/|/   \\__/  V0.01" );
+            Console.WriteLine("                                                               ");
 
-            Console.WriteLine("Enter the server's port:");
-            int serverPort = Int32.Parse(Console.ReadLine());
+            try
+            {
+                Console.WriteLine("Enter the port to bind the client to:");
+                int clientPort = Int32.Parse(Console.ReadLine());
 
-            ClientController clientController = new ClientController();
-            clientController.ConnectToServer(ipString, serverIpAddress, clientPort, serverPort);
+                Console.WriteLine("Enter the server's port:");
+                int serverPort = Int32.Parse(Console.ReadLine());
+
+                ClientController clientController = new ClientController();
+                clientController.ConnectToServer(ipString, serverIpAddress, clientPort, serverPort);
+            }
+            catch (FormatException)
+            {
+                Console.WriteLine();
+                Console.WriteLine("Invalid port format");
+                Console.WriteLine("The client will now terminate");
+                Console.WriteLine();
+                Console.WriteLine("Press any key to continue...");
+                Console.ReadKey();
+            }
         }
     }
 }

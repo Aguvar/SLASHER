@@ -17,6 +17,8 @@ namespace SlasherClient
         private const string ATTACK_COMMAND = "attack";
         private const string MOVE_COMMAND = "move";
 
+        private static bool terminateClient = false;
+
         private static bool loggedIn = false;
 
         private static Socket serverConnection;
@@ -24,39 +26,66 @@ namespace SlasherClient
 
         public void ConnectToServer(string ipString, string serverIpAddress, int clientPort, int serverPort)
         {
-            serverConnection = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            serverConnection.Bind(new IPEndPoint(IPAddress.Parse(ipString), clientPort));
-
-            serverConnection.Connect(new IPEndPoint(IPAddress.Parse(serverIpAddress), serverPort));
-            Console.WriteLine("Connected to server!");
-
-            Thread receiveThread = new Thread(() => ReceiveMsgService(serverConnection));
-
-            receiveThread.Start();
-
-            //Procesar input
-            while (true)
+            try
             {
-                Console.WriteLine("Enter your commands!");
-                string input = Console.ReadLine();
+                serverConnection = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                serverConnection.Bind(new IPEndPoint(IPAddress.Parse(ipString), clientPort));
 
-                ParseCommand(input);
+                serverConnection.Connect(new IPEndPoint(IPAddress.Parse(serverIpAddress), serverPort));
+                Console.WriteLine("Connected to server!");
+
+                Thread receiveThread = new Thread(() => ReceiveMsgService(serverConnection));
+
+                receiveThread.Start();
+
+                //Procesar input
+                while (!terminateClient)
+                {
+                    Console.WriteLine("Enter your commands!");
+                    string input = Console.ReadLine();
+
+                    ParseCommand(input);
+                }
+
+                serverConnection.Close();
+                
             }
+            catch (SocketException)
+            {
+                Console.WriteLine();
+                Console.WriteLine("Could not connect to server.");
+                Console.WriteLine("The client will now terminate.");
+                terminateClient = true;
+            }
+
+            Console.WriteLine();
+            Console.WriteLine("Press any key to exit...");
+            Console.ReadKey();
         }
 
         private static void ReceiveMsgService(Socket client)
         {
-            while (true)
+            while (!terminateClient)
             {
-                var msgLength = new byte[4];
-                client.Receive(msgLength);
+                try
+                {
+                    var msgLength = new byte[4];
+                    client.Receive(msgLength);
 
-                var msgBytes = new byte[BitConverter.ToInt32(msgLength, 0)];
-                client.Receive(msgBytes);
+                    var msgBytes = new byte[BitConverter.ToInt32(msgLength, 0)];
+                    client.Receive(msgBytes);
 
-                string message = Encoding.ASCII.GetString(msgBytes);
+                    string message = Encoding.ASCII.GetString(msgBytes);
 
-                ParseServerMessage(message);
+                    ParseServerMessage(message);
+                }
+                catch (SocketException)
+                {
+                    Console.WriteLine();
+                    Console.WriteLine("Connection to server lost");
+                    Console.WriteLine("The client will now terminate");
+                    terminateClient = true;
+                }
             }
         }
 
@@ -130,10 +159,10 @@ namespace SlasherClient
                         switch (command[i])
                         {
                             case UP_MOVEMENT_ARG:
-                                commandToSend +=  UP_MOVEMENT_ARG;
+                                commandToSend += UP_MOVEMENT_ARG;
                                 break;
                             case LEFT_MOVEMENT_ARG:
-                                commandToSend +=  LEFT_MOVEMENT_ARG;
+                                commandToSend += LEFT_MOVEMENT_ARG;
                                 break;
                             case RIGHT_MOVEMENT_ARG:
                                 commandToSend += RIGHT_MOVEMENT_ARG;
@@ -163,10 +192,18 @@ namespace SlasherClient
                 case "logout":
                     LogoutRoutine();
                     break;
+                case "exit":
+                    ExitRoutine();
+                    break;
                 default:
                     Console.WriteLine("Invalid input");
                     return;
             }
+        }
+
+        private static void ExitRoutine()
+        {
+            terminateClient = true;
         }
 
         private static void JoinOngoingGame()

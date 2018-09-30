@@ -3,6 +3,7 @@ using SlasherServer.Game;
 using SlasherServer.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
@@ -33,15 +34,23 @@ namespace SlasherServer
 
         public static void ListenForConnections(Socket serverSocket)
         {
-            Console.WriteLine("Listening for clients...");
-            while (true)
+            try
             {
-                var client = serverSocket.Accept();
-                Console.WriteLine("Client Connected!");
+                Console.WriteLine("Listening for clients...");
+                while (true)
+                {
+                    var client = serverSocket.Accept();
+                    Console.WriteLine("Client Connected!");
 
-                Thread receiveThread = new Thread(() => HandleConnection(client));
+                    Thread receiveThread = new Thread(() => HandleConnection(client));
 
-                receiveThread.Start();
+                    receiveThread.Start();
+                }
+            }
+            catch (SocketException)
+            {
+                //Do nothing since it's just closing the console
+                Debug.Print("The listening thread has closed");
             }
         }
 
@@ -65,11 +74,20 @@ namespace SlasherServer
 
                     string message = Encoding.ASCII.GetString(msgBytes);
 
-                    string response = ParseMessage(message, socketId, clientConnection);
-
-                    if (!string.IsNullOrWhiteSpace(response))
+                    try
                     {
-                        SendMessage(clientConnection, response);
+                        string response = ParseMessage(message, socketId, clientConnection);
+
+                        if (!string.IsNullOrWhiteSpace(response))
+                        {
+                            SendMessage(clientConnection, response);
+                        }
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        //Just ignore the command and alert us
+                        Debug.Print($"An unknown command from client {socketId} has been received");
+                        Debug.Print($"Received message: {message}");
                     }
                 }
                 catch (SocketException)
@@ -170,14 +188,14 @@ namespace SlasherServer
             {
                 if (Users.Exists(u => u.Nickname.Equals(nickname)))
                 {
-                    return string.Format("consoleprint#User {0} is already registered");
+                    return string.Format("consoleprint#User {0} is already registered", nickname);
                 }
 
                 Users.Add(new User()
                 {
                     Nickname = nickname,
                     AvatarRoute = avatarRoute
-                }); 
+                });
             }
 
             using (FileStream stream = new FileStream(avatarRoute, FileMode.Create))
@@ -229,7 +247,7 @@ namespace SlasherServer
                 else
                 {
                     return "consoleprint#The user does not exist";
-                } 
+                }
             }
         }
 
@@ -321,7 +339,7 @@ namespace SlasherServer
         private static string GetPlayerStatusString(IPlayer player)
         {
             var game = GetGame();
-            return string.Format("{0}\nCurrent Health: {1}", game.GetPlayerSurroundings(game.GetPlayerPosition(player),1),player.Health);
+            return string.Format("{0}\nCurrent Health: {1}", game.GetPlayerSurroundings(game.GetPlayerPosition(player), 1), player.Health);
         }
 
         private static Position ParsePlayerMovement(string movementString)
