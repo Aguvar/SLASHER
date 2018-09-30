@@ -1,9 +1,5 @@
 ﻿using SlasherServer.Interfaces;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SlasherServer.Game
 {
@@ -12,31 +8,18 @@ namespace SlasherServer.Game
         private Guid _id;
         public Guid Id { get => _id; set => _id = value; }
 
-        private int _health = 100;
-        public int Health { get => _health; set => _health = value; }
+        private int _health;
+        public int Health { get => _health; set => _health = Math.Max(0, value); }
 
         private int _attackDamage = 10;
         public int AttackDamage { get { return _attackDamage; } private set { _attackDamage = value; } }
 
         public Monster()
         {
-            this.Health = 100;
+            Health = 100;
         }
 
-        public bool ReceiveDamage(int damage)
-        {
-            this.Health -= damage;
-            if (this.Health <= 0)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-        public char Type()
+        public char GetPlayerType()
         {
             return 'M';
         }
@@ -51,6 +34,11 @@ namespace SlasherServer.Game
             {
                 return false;
             }
+        }
+
+        public void ReceiveDamageFrom(IPlayer attacker)
+        {
+            Health -= attacker.AttackDamage;
         }
     }
 }

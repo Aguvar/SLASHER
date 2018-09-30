@@ -1,3 +1,6 @@
+using SlasherServer.Authentication;
+using SlasherServer.Game;
+using SlasherServer.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -6,17 +9,14 @@ using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
 using System.Threading;
-using SlasherServer.Authentication;
-using SlasherServer.Game;
-using SlasherServer.Interfaces;
 
 namespace SlasherServer
 {
     public static class ClientHandler
     {
-        public static List<User> Users {get; set;}
-        public static Dictionary<Guid, User> LoggedUsers {get; set;}
-        public static Dictionary<Guid, Socket> ActiveConnections {get; set;}
+        public static List<User> Users { get; set; }
+        public static Dictionary<Guid, User> LoggedUsers { get; set; }
+        public static Dictionary<Guid, Socket> ActiveConnections { get; set; }
 
         public static void Initialize()
         {
@@ -115,26 +115,25 @@ namespace SlasherServer
         private static string ParseMessage(string message, Guid socketId, Socket clientConnection)
         {
             string[] commandArray = message.Split('#');
-            string firstArgument = commandArray[1];      //either nickname, character type or movements to perform 
-            string secondArgument = commandArray[2];
             string response = string.Empty;
 
             switch (commandArray[0].ToLower())
             {
                 case "signup":
-                    response = SignUpUser(clientConnection, firstArgument, secondArgument);
+                    string imageFormat = commandArray[2];
+                    response = SignUpUser(clientConnection, commandArray[1], imageFormat);
                     return response;
                 case "login":
-                    response = LogIn(clientConnection, socketId, firstArgument);
+                    response = LogIn(clientConnection, socketId, commandArray[1]);
                     return response;
                 case "logout":
                     response = LogOut(socketId);
                     return response;
                 case "joingame":
-                    response = JoinGame(socketId, firstArgument);
+                    response = JoinGame(socketId, commandArray[1]);
                     return response;
                 case "move":
-                    response = MoveCharacter(socketId, firstArgument);
+                    response = MoveCharacter(socketId, commandArray[1]);
                     return response;
                 case "attack":
                     response = PerformAttack(socketId);
@@ -145,7 +144,11 @@ namespace SlasherServer
 
         private static string PerformAttack(Guid socketId)
         {
-            throw new NotImplementedException();
+            GameHandler game = GetGame();
+
+            game.ExecutePlayerAttack(game.GetPlayerById(socketId));
+
+            return "";
         }
 
         private static string SignUpUser(Socket clientConnection, string nickname, string imageFormat)
@@ -272,13 +275,13 @@ namespace SlasherServer
 
             if (game.MatchOngoing)
             {
-                IPlayer player = game.GetPlayer(socketId);
+                IPlayer player = game.GetPlayerById(socketId);
                 if (player != null)
                 {
                     if (game.Move(player, ParsePlayerMovement(movements)))
                     {
                         Position position = game.GetPlayerPosition(player);
-                        return string.Format("consoleprint#{0}", game.GetPlayerSurroundings(position, 1));
+                        return string.Format("consoleprint#{0}\nCurrent Health: {1}", game.GetPlayerSurroundings(position, 1), player.Health);
                     }
                     else
                     {
@@ -302,10 +305,10 @@ namespace SlasherServer
                 switch (direction)
                 {
                     case 'w':
-                        movement.Col += 1;
+                        movement.Col -= 1;
                         break;
                     case 's':
-                        movement.Col -= 1;
+                        movement.Col += 1;
                         break;
                     case 'a':
                         movement.Row -= 1;

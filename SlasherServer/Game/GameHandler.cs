@@ -3,8 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SlasherServer.Game
 {
@@ -29,20 +27,30 @@ namespace SlasherServer.Game
             players = new List<IPlayer>();
         }
 
-        public void Attack(IPlayer playerWhoAttacks)
+        public void ExecutePlayerAttack(IPlayer playerWhoAttacks)
         {
             Position playerPosition = GetPlayerPosition(playerWhoAttacks);
             if (playerPosition != null)
             {
-                AttackNeighbours(playerPosition, playerWhoAttacks.AttackDamage);
+                for (int currentRow = playerPosition.Row - 1; currentRow <= playerPosition.Row + 1; currentRow++)
+                {
+                    for (int currentCol = playerPosition.Col - 1; currentCol <= playerPosition.Col + 1; currentCol++)
+                    {
+                        if (!PositionOutOfBounds(currentCol,currentRow) && gameBoard[currentRow,currentCol] != null && !(currentRow == playerPosition.Row && currentCol == playerPosition.Col))
+                        {
+                            IPlayer target = gameBoard[currentRow, currentCol];
+                            target.ReceiveDamageFrom(playerWhoAttacks);
+                        }
+                    }
+                }
             }
         }
-        
+
         public bool Move(IPlayer player, Position deltaPosition)
         {
             Position currentPosition = GetPlayerPosition(player);
             Position nextPosition = new Position(currentPosition.Row + deltaPosition.Row, currentPosition.Col + deltaPosition.Col);
-            if(nextPosition.Row >= 0 && nextPosition.Row < BOARD_SIZE && nextPosition.Col >= 0 && nextPosition.Col < BOARD_SIZE)
+            if (nextPosition.Row >= 0 && nextPosition.Row < BOARD_SIZE && nextPosition.Col >= 0 && nextPosition.Col < BOARD_SIZE)
             {
                 if (gameBoard[nextPosition.Row, nextPosition.Col] == null)
                 {
@@ -79,30 +87,6 @@ namespace SlasherServer.Game
             return new Position(row, col);
         }
 
-        private void AttackNeighbours(Position playerPosition, int damage)
-        {
-            int minRow = Math.Max(0, playerPosition.Row - 1);
-            int maxRow = Math.Min(gameBoard.Length, playerPosition.Row + 1);
-            int minCol = Math.Max(0, playerPosition.Col - 1);
-            int maxCol = Math.Min(gameBoard.Length, playerPosition.Col + 1);
-
-            for (int row = minRow; row < maxRow; row++)
-            {
-                for (int col = minCol; col < maxCol; col++)
-                {
-                    IPlayer neighbour = gameBoard[row, col];
-                    if (neighbour != null)
-                    {
-                        bool isKilled = neighbour.ReceiveDamage(damage);
-                        if (isKilled)
-                        {
-                            //Delete player and disconnect client
-                        }
-                    }
-                }
-            }
-        }
-
         public Position GetPlayerPosition(IPlayer player)
         {
             for (int row = 0; row < BOARD_SIZE; row++)
@@ -120,13 +104,13 @@ namespace SlasherServer.Game
 
         public string GetPlayerSurroundings(Position position, int maxDistance)
         {
-            string output = "";
+            string output = "\n";
 
             for (int currentCol = position.Col - maxDistance; currentCol <= position.Col + maxDistance; currentCol++)
             {
                 for (int currentRow = position.Row - maxDistance; currentRow <= position.Row + maxDistance; currentRow++)
                 {
-                    if (currentRow < 0 || currentRow > BOARD_SIZE - 1 || currentCol < 0 || currentCol > BOARD_SIZE - 1)
+                    if (PositionOutOfBounds(currentCol, currentRow))
                     {
                         output += "X";
                     }
@@ -143,16 +127,21 @@ namespace SlasherServer.Game
                         }
                         else
                         {
-                            output += currentPlayer.GetType();
+                            output += currentPlayer.GetPlayerType();
                         }
                     }
-                    
+
                     output += " ";
                 }
                 output += "\n";
             }
 
             return output;
+        }
+
+        private static bool PositionOutOfBounds(int currentCol, int currentRow)
+        {
+            return currentRow < 0 || currentRow > BOARD_SIZE - 1 || currentCol < 0 || currentCol > BOARD_SIZE - 1;
         }
 
         internal void StartGame()
@@ -204,7 +193,7 @@ namespace SlasherServer.Game
                 {
                     if (gameBoard[x, y] != null && gameBoard[x, y].Health > 0)
                     {
-                        if (gameBoard[x, y].Type() == 'S' || monsterFound)
+                        if (gameBoard[x, y].GetPlayerType() == 'S' || monsterFound)
                         {
                             return false;
                         }
@@ -225,7 +214,7 @@ namespace SlasherServer.Game
             {
                 for (int y = 0; y < BOARD_SIZE; y++)
                 {
-                    if (gameBoard[x, y] != null && gameBoard[x, y].Type() == 'M' && gameBoard[x, y].Health > 0)
+                    if (gameBoard[x, y] != null && gameBoard[x, y].GetPlayerType() == 'M' && gameBoard[x, y].Health > 0)
                     {
                         return false;
                     }
@@ -239,7 +228,7 @@ namespace SlasherServer.Game
             throw new NotImplementedException();
         }
 
-        public IPlayer GetPlayer(Guid id)
+        public IPlayer GetPlayerById(Guid id)
         {
             return players.FirstOrDefault<IPlayer>(p => p.Id.Equals(id));
         }

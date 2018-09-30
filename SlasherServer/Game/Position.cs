@@ -1,5 +1,4 @@
-﻿using System;
-namespace SlasherServer.Game
+﻿namespace SlasherServer.Game
 {
     public class Position
     {

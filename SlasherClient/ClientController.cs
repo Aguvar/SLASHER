@@ -113,7 +113,7 @@ namespace SlasherClient
 
         private static void ParseCommand(string input)
         {
-            string[] command = input.ToLower().Split(' ');
+            string[] command = input.Trim().ToLower().Split(' ');
 
             if (command.Length <= 0 || command.Length > 3)
             {
@@ -124,7 +124,7 @@ namespace SlasherClient
             switch (command[0])
             {
                 case MOVE_COMMAND:
-                    string commandToSend = "move";
+                    string commandToSend = "move#";
                     for (int i = 1; i < command.Length; i++)
                     {
                         switch (command[i])
