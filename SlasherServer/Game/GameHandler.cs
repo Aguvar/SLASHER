@@ -37,20 +37,23 @@ namespace SlasherServer.Game
 
         public void ExecutePlayerAttack(IPlayer playerWhoAttacks)
         {
-            Position playerPosition = GetPlayerPosition(playerWhoAttacks);
-            if (playerPosition != null)
+            lock (attackPlayerLock)
             {
-                for (int currentRow = playerPosition.Row - 1; currentRow <= playerPosition.Row + 1; currentRow++)
+                Position playerPosition = GetPlayerPosition(playerWhoAttacks);
+                if (playerPosition != null)
                 {
-                    for (int currentCol = playerPosition.Col - 1; currentCol <= playerPosition.Col + 1; currentCol++)
+                    for (int currentRow = playerPosition.Row - 1; currentRow <= playerPosition.Row + 1; currentRow++)
                     {
-                        if (!PositionOutOfBounds(currentCol, currentRow) && gameBoard[currentRow, currentCol] != null && !(currentRow == playerPosition.Row && currentCol == playerPosition.Col))
+                        for (int currentCol = playerPosition.Col - 1; currentCol <= playerPosition.Col + 1; currentCol++)
                         {
-                            IPlayer target = gameBoard[currentRow, currentCol];
-                            target.ReceiveDamageFrom(playerWhoAttacks);
+                            if (!PositionOutOfBounds(currentCol, currentRow) && gameBoard[currentRow, currentCol] != null && !(currentRow == playerPosition.Row && currentCol == playerPosition.Col))
+                            {
+                                IPlayer target = gameBoard[currentRow, currentCol];
+                                target.ReceiveDamageFrom(playerWhoAttacks);
+                            }
                         }
                     }
-                }
+                } 
             }
         }
 
