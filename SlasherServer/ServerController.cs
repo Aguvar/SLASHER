@@ -92,7 +92,7 @@ namespace SlasherServer
 
             ClientHandler.BroadcastMessage("\nThe game has ended! ");
 
-            List<IPlayer> winners = game.GetWinners();
+            List<IPlayer> winners = game.Winners;
 
             switch (game.MatchResult)
             {

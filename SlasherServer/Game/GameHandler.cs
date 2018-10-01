@@ -206,7 +206,6 @@ namespace SlasherServer.Game
 
         internal bool IsOver()
         {
-            return false;
             long currentMatchTime = matchTimer.ElapsedMilliseconds;
 
             //180 seconds = 180000 milliseconds
@@ -260,11 +259,6 @@ namespace SlasherServer.Game
                 }
             }
             return true;
-        }
-
-        internal List<IPlayer> GetWinners()
-        {
-            throw new NotImplementedException();
         }
 
         public IPlayer GetPlayerById(Guid id)
