@@ -174,6 +174,11 @@ namespace SlasherServer
 
             IPlayer playerWhoAttacks = game.GetPlayerById(socketId);
 
+            if (playerWhoAttacks.Health == 0)
+            {
+                return "consoleprint#The dead cannot attack. Stay dead and stay down.";
+            }
+
             game.ExecutePlayerAttack(playerWhoAttacks);
 
             return string.Format(response, GetPlayerStatusString(playerWhoAttacks));
@@ -295,7 +300,7 @@ namespace SlasherServer
                     Position position = game.GetPlayerPosition(player);
                     string surroundings = game.GetPlayerSurroundings(position, 1);
 
-                    return string.Format("consoleprint#{0}\n\n{1}", surroundings, "Game joined! Enjoy your stay!");
+                    return $"consoleprint#{surroundings}\n\nGame joined! Enjoy your stay!";
                 }
                 else
                 {
@@ -317,6 +322,10 @@ namespace SlasherServer
                 IPlayer player = game.GetPlayerById(socketId);
                 if (player != null)
                 {
+                    if (player.Health == 0)
+                    {
+                        return ("consoleprint#The dead cannot move. This is not a zombie setting.");
+                    }
                     if (game.Move(player, ParsePlayerMovement(movements)))
                     {
                         Position position = game.GetPlayerPosition(player);

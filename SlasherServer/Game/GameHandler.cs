@@ -124,7 +124,7 @@ namespace SlasherServer.Game
 
         public string GetPlayerSurroundings(Position position, int maxDistance)
         {
-            string output = "\n";
+            string output = "\nMap:\n";
 
             for (int currentCol = position.Col - maxDistance; currentCol <= position.Col + maxDistance; currentCol++)
             {
@@ -147,7 +147,7 @@ namespace SlasherServer.Game
                         }
                         else
                         {
-                            output += currentPlayer.GetPlayerType();
+                            output += currentPlayer.Health > 0 ? currentPlayer.GetPlayerType() : 'B';
                         }
                     }
 

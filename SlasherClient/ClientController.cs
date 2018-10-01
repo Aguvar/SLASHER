@@ -38,9 +38,13 @@ namespace SlasherClient
 
                 receiveThread.Start();
 
+                Console.WriteLine();
+                Console.WriteLine("Type \"Help\" to list all available commands");
+
                 //Procesar input
                 while (!terminateClient)
                 {
+                    Console.WriteLine();
                     Console.WriteLine("Enter your commands!");
                     string input = Console.ReadLine();
 
@@ -48,7 +52,7 @@ namespace SlasherClient
                 }
 
                 serverConnection.Close();
-                
+
             }
             catch (SocketException)
             {
@@ -192,6 +196,9 @@ namespace SlasherClient
                 case "logout":
                     LogoutRoutine();
                     break;
+                case "help":
+                    PrintHelp();
+                    break;
                 case "exit":
                     ExitRoutine();
                     break;
@@ -199,6 +206,31 @@ namespace SlasherClient
                     Console.WriteLine("Invalid input");
                     return;
             }
+        }
+
+        private static void PrintHelp()
+        {
+            Console.WriteLine(
+                "\nAvailable commands: " +
+                "\nsignup - Register a user in the server" +
+                "\nlogin - Login to the server" +
+                "\nlogout - Logout from the server" +
+                "\nhelp - Prints this very same text. Duh" +
+                "\nexit - Closes the connection to the server and shuts down the client" +
+                "\n\nGame controls:" +
+                "\nattack - Self explanatory" +
+                "\nmove <dir> <dir> - Move in a certain direction specified by the <dir> parameter. <dir> can be one of these: " +
+                $"\n{UP_MOVEMENT_ARG} - Up" +
+                $"\n{DOWN_MOVEMENT_ARG} - Down" +
+                $"\n{LEFT_MOVEMENT_ARG} - Left" +
+                $"\n{RIGHT_MOVEMENT_ARG} - Right" +
+                "\n\nReading the map:" +
+                "\n* - You, the player, a thinking entity. Hopefully" +
+                "\nS - A survivor" +
+                "\nM - A monster" +
+                "\nB - A dead body" +
+                "\nX - A wall" +
+                "\n- - Grass, you can only move through grass");
         }
 
         private static void ExitRoutine()
@@ -276,52 +308,60 @@ namespace SlasherClient
 
             string command = string.Format("signup#{0}#{1}", nickname, imageFormat);
 
-            SendMessageToServer(serverConnection, command);
 
-            //Send image
-            using (FileStream stream = new FileStream(photoRoute, FileMode.Open))
+            try
             {
-                long imageSize = stream.Length;
-                long pieces = (imageSize + 1024 - 1) / 1024;
-
-                byte[] bytePieces = BitConverter.GetBytes(pieces);
-                int piecesPointer = 0;
-                while (piecesPointer < 8)
+                //Send image
+                using (FileStream stream = new FileStream(photoRoute, FileMode.Open))
                 {
-                    var sentBytes = serverConnection.Send(bytePieces, piecesPointer, 8 - piecesPointer, SocketFlags.None);
-                    if (sentBytes == 0)
-                    {
-                        throw new SocketException();
-                    }
-                    piecesPointer += sentBytes;
-                }
+                    SendMessageToServer(serverConnection, command);
 
-                byte[] imageBuffer = new byte[1024];
-                while (stream.Read(imageBuffer, 0, imageBuffer.Length) > 0)
-                {
-                    int length = imageBuffer.Count();
-                    int posLength = 0;
-                    byte[] byteLength = BitConverter.GetBytes(length);
-                    while (posLength < 4)
+                    long imageSize = stream.Length;
+                    long pieces = (imageSize + 1024 - 1) / 1024;
+
+                    byte[] bytePieces = BitConverter.GetBytes(pieces);
+                    int piecesPointer = 0;
+                    while (piecesPointer < 8)
                     {
-                        var sentBytes = serverConnection.Send(byteLength, posLength, 4 - posLength, SocketFlags.None);
+                        var sentBytes = serverConnection.Send(bytePieces, piecesPointer, 8 - piecesPointer, SocketFlags.None);
                         if (sentBytes == 0)
                         {
                             throw new SocketException();
                         }
-                        posLength += sentBytes;
+                        piecesPointer += sentBytes;
                     }
-                    var pos = 0;
-                    while (pos < length)
+
+                    byte[] imageBuffer = new byte[1024];
+                    while (stream.Read(imageBuffer, 0, imageBuffer.Length) > 0)
                     {
-                        var sentBytes = serverConnection.Send(imageBuffer, pos, length - pos, SocketFlags.None);
-                        if (sentBytes == 0)
+                        int length = imageBuffer.Count();
+                        int posLength = 0;
+                        byte[] byteLength = BitConverter.GetBytes(length);
+                        while (posLength < 4)
                         {
-                            throw new SocketException();
+                            var sentBytes = serverConnection.Send(byteLength, posLength, 4 - posLength, SocketFlags.None);
+                            if (sentBytes == 0)
+                            {
+                                throw new SocketException();
+                            }
+                            posLength += sentBytes;
                         }
-                        pos += sentBytes;
+                        var pos = 0;
+                        while (pos < length)
+                        {
+                            var sentBytes = serverConnection.Send(imageBuffer, pos, length - pos, SocketFlags.None);
+                            if (sentBytes == 0)
+                            {
+                                throw new SocketException();
+                            }
+                            pos += sentBytes;
+                        }
                     }
                 }
+            }
+            catch (FileNotFoundException)
+            {
+                Console.WriteLine("Could not open the specified file");
             }
         }
     }

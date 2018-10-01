@@ -11,6 +11,7 @@ namespace SlasherServer
 {
     public class ServerController
     {
+        private const string helpString = "Listing all commands:\nlistusers - List all registered users\nlistloggedusers - List all currently logged users\nstartgame - Starts a new Slasher game. Disables all other commands for the duration of the game\nexit - Closes all currently active connections and shuts down the server";
         public static GameHandler game;
         private static bool terminateConsole = false;
         private Socket listeningSocket;
@@ -73,12 +74,12 @@ namespace SlasherServer
             }
         }
 
-        private static void StartMatch()
+        private static void ExecuteGame()
         {
             Console.WriteLine();
-            Console.WriteLine("Starting match!");
+            Console.WriteLine("Starting game!");
 
-            ClientHandler.BroadcastMessage("A new game is starting, fight for your lives!");
+            ClientHandler.BroadcastMessage("\nA new game is starting, fight for your lives!");
 
             game.StartGame();
 
@@ -127,22 +128,16 @@ namespace SlasherServer
             switch (input.ToLower())
             {
                 case "help":
-                    Console.WriteLine("List all commands");
+                    PrintHelp();
                     break;
                 case "listusers":
-                    foreach (var user in ClientHandler.Users)
-                    {
-                        Console.WriteLine(user.Nickname);
-                    }
+                    PrintRegisteredUsers();
                     break;
                 case "listloggedusers":
-                    foreach (var pair in ClientHandler.LoggedUsers)
-                    {
-                        Console.WriteLine(pair.Value.Nickname);
-                    }
+                    PrintLoggedUsers();
                     break;
                 case "startgame":
-                    StartMatch();
+                    ExecuteGame();
                     break;
                 case "exit":
                     ExitRoutine();
@@ -150,6 +145,28 @@ namespace SlasherServer
                 default:
                     break;
             }
+        }
+
+        private static void PrintLoggedUsers()
+        {
+            foreach (var pair in ClientHandler.LoggedUsers)
+            {
+                Console.WriteLine(pair.Value.Nickname);
+            }
+        }
+
+        private static void PrintRegisteredUsers()
+        {
+            foreach (var user in ClientHandler.Users)
+            {
+                Console.WriteLine(user.Nickname);
+            }
+        }
+
+        private static void PrintHelp()
+        {
+            Console.WriteLine();
+            Console.WriteLine(helpString);
         }
 
         private static void ExitRoutine()
