@@ -95,7 +95,7 @@ namespace SlasherServer
                     connectionActive = false;
                 }
             }
-
+            ActiveConnections.Remove(socketId);
             Console.WriteLine(string.Format("Connection with client {0} has been terminated.", socketId.ToString()));
         }
 
