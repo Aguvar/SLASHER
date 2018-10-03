@@ -170,9 +170,17 @@ namespace SlasherServer
         {
             GameHandler game = GetGame();
 
-            var response = "consoleprint#{0}";
-
             IPlayer playerWhoAttacks = game.GetPlayerById(socketId);
+
+            if (!game.MatchOngoing)
+            {
+                return "consoleprint#Woah woah, there's no game running right now, chill.";
+            }
+
+            if (playerWhoAttacks == null)
+            {
+                return "consoleprint#You haven't joined the game yet.";
+            }
 
             if (playerWhoAttacks.Health == 0)
             {
@@ -181,7 +189,7 @@ namespace SlasherServer
 
             game.ExecutePlayerAttack(playerWhoAttacks);
 
-            return string.Format(response, GetPlayerStatusString(playerWhoAttacks));
+            return $"consoleprint#{GetPlayerStatusString(playerWhoAttacks)}";
         }
 
         private static string SignUpUser(Socket clientConnection, string nickname, string imageFormat)

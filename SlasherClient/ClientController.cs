@@ -157,32 +157,40 @@ namespace SlasherClient
             switch (command[0])
             {
                 case MOVE_COMMAND:
-                    string commandToSend = "move#";
-                    for (int i = 1; i < command.Length; i++)
+                    if (loggedIn)
                     {
-                        switch (command[i])
+                        string commandToSend = "move#";
+                        for (int i = 1; i < command.Length; i++)
                         {
-                            case UP_MOVEMENT_ARG:
-                                commandToSend += UP_MOVEMENT_ARG;
-                                break;
-                            case LEFT_MOVEMENT_ARG:
-                                commandToSend += LEFT_MOVEMENT_ARG;
-                                break;
-                            case RIGHT_MOVEMENT_ARG:
-                                commandToSend += RIGHT_MOVEMENT_ARG;
-                                break;
-                            case DOWN_MOVEMENT_ARG:
-                                commandToSend += DOWN_MOVEMENT_ARG;
-                                break;
-                            default:
-                                Console.WriteLine("Invalid input");
-                                return;
+                            switch (command[i])
+                            {
+                                case UP_MOVEMENT_ARG:
+                                    commandToSend += UP_MOVEMENT_ARG;
+                                    break;
+                                case LEFT_MOVEMENT_ARG:
+                                    commandToSend += LEFT_MOVEMENT_ARG;
+                                    break;
+                                case RIGHT_MOVEMENT_ARG:
+                                    commandToSend += RIGHT_MOVEMENT_ARG;
+                                    break;
+                                case DOWN_MOVEMENT_ARG:
+                                    commandToSend += DOWN_MOVEMENT_ARG;
+                                    break;
+                                default:
+                                    Console.WriteLine("Invalid input");
+                                    return;
+                            }
                         }
+                        SendMessageToServer(serverConnection, commandToSend);
                     }
-                    SendMessageToServer(serverConnection, commandToSend);
+                    else
+                    {
+                        Console.WriteLine();
+                        Console.WriteLine("You need to be logged in to perform that action!");
+                    }
                     break;
                 case ATTACK_COMMAND:
-                    SendMessageToServer(serverConnection, "attack");
+                    AttackRoutine();
                     break;
                 case "joingame":
                     JoinOngoingGame();
@@ -205,6 +213,19 @@ namespace SlasherClient
                 default:
                     Console.WriteLine("Invalid input");
                     return;
+            }
+        }
+
+        private static void AttackRoutine()
+        {
+            if (loggedIn)
+            {
+                SendMessageToServer(serverConnection, "attack");
+            }
+            else
+            {
+                Console.WriteLine();
+                Console.WriteLine("You need to be logged in to perform that action!");
             }
         }
 

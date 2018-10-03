@@ -90,6 +90,9 @@ namespace SlasherServer
 
             game.EndGame();
 
+            Console.WriteLine();
+            Console.WriteLine("The game has ended!");
+
             ClientHandler.BroadcastMessage("\nThe game has ended! ");
 
             List<IPlayer> winners = game.Winners;
