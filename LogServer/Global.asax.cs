@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Web;
 using System.Web.Http;
 using System.Web.Mvc;
@@ -13,6 +14,11 @@ namespace LogServer
     {
         protected void Application_Start()
         {
+            //Create a new Thread that constantly checks out the MSMQ
+            MsmqHandler msmqHandler = new MsmqHandler();
+            Thread msmqThread = new Thread(() => msmqHandler.HandleQueue());
+            msmqThread.Start();
+            
             AreaRegistration.RegisterAllAreas();
             GlobalConfiguration.Configure(WebApiConfig.Register);
             FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
