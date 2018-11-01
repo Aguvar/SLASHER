@@ -7,6 +7,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SlasherServer", "SlasherSer
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SlasherClient", "SlasherClient\SlasherClient.csproj", "{FBD4ED9F-B09B-44C4-8FC9-20076B4A5D2E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LogServer", "LogServer\LogServer.csproj", "{0AE30ED4-C062-4994-A484-D98DD0972464}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UserServer", "UserServer\UserServer.csproj", "{B94E9F03-FD39-42C4-99A6-A6C6845F896D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +25,14 @@ Global
 		{FBD4ED9F-B09B-44C4-8FC9-20076B4A5D2E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FBD4ED9F-B09B-44C4-8FC9-20076B4A5D2E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FBD4ED9F-B09B-44C4-8FC9-20076B4A5D2E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0AE30ED4-C062-4994-A484-D98DD0972464}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0AE30ED4-C062-4994-A484-D98DD0972464}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0AE30ED4-C062-4994-A484-D98DD0972464}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0AE30ED4-C062-4994-A484-D98DD0972464}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B94E9F03-FD39-42C4-99A6-A6C6845F896D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B94E9F03-FD39-42C4-99A6-A6C6845F896D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B94E9F03-FD39-42C4-99A6-A6C6845F896D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B94E9F03-FD39-42C4-99A6-A6C6845F896D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
