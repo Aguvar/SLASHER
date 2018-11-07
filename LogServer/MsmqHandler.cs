@@ -19,8 +19,6 @@ namespace LogServer
 
         internal void HandleQueue()
         {
-            GameLog gameLog = GameLog.GetInstance();
-
             while (true)
             {
                 using (var queue = new MessageQueue(queuePath))
@@ -33,31 +31,44 @@ namespace LogServer
                     switch (message.Label)
                     {
                         case "log":
-                            gameLog.AddEntry(message.Body.ToString());
+                            AddLog(message);
                             break;
                         case "endLog":
-                            gameLog.FinishLog();
+                            FinishGameLog();
                             break;
                         case "highscore":
                             AddScore(messageArray);
                             break;
                         case "statistic":
-                            LogPlayerMatch(messageArray);
+                            LogPlayerMatchStatistics(messageArray);
                             break;
-
                     }
                 }
             }
         }
 
-        private static void LogPlayerMatch(string[] messageArray)
+        private static void AddLog(Message message)
+        {
+            GameLog gameLog = GameLog.GetInstance();
+
+            gameLog.AddEntry(message.Body.ToString());
+        }
+
+        private static void FinishGameLog()
+        {
+            GameLog gameLog = GameLog.GetInstance();
+
+            gameLog.FinishLog();
+        }
+
+        private static void LogPlayerMatchStatistics(string[] messageArray)
         {
             StatisticsHandler statisticsHandler = StatisticsHandler.GetInstance();
 
             string nickname = messageArray[0];
             char team = messageArray[1][0];
-            char result = messageArray[2][0];
-            statisticsHandler.AddPlayerMatchResult(nickname, team, result);
+            bool wonTheMatch = bool.Parse(messageArray[2]);
+            statisticsHandler.AddPlayerMatchResult(nickname, team, wonTheMatch);
         }
 
         private static void AddScore(string[] messageArray)
@@ -66,7 +77,8 @@ namespace LogServer
 
             string nickname = messageArray[0];
             int score = int.Parse(messageArray[1]);
-            highScoreHandler.AddScore(nickname, score);
+            char team = messageArray[2][0];
+            highScoreHandler.AddScore(nickname, score, team);
         }
     }
 }

@@ -28,16 +28,18 @@ namespace LogServer.Models
         {
             public string Nickname { get; private set; }
             public int Score { get; private set; }
+            public char Team { get; private set; }
 
-            public HighScore(string nickname, int score)
+            public HighScore(string nickname, int score, char team)
             {
                 Nickname = nickname;
                 Score = score;
+                Team = team;
             }
 
             public override string ToString()
             {
-                return $"{Nickname} - {Score} Points";
+                return $"{Nickname} - {Score} Points - Team: {Team}";
             }
         }
 
@@ -58,9 +60,9 @@ namespace LogServer.Models
             return ret;
         }
 
-        public void AddScore(string nickname, int score)
+        public void AddScore(string nickname, int score, char team)
         {
-            HighScore highScore = new HighScore(nickname, score);
+            HighScore highScore = new HighScore(nickname, score, team);
 
             _highScores.Add(highScore);
             _highScores.OrderByDescending(h => h.Score);

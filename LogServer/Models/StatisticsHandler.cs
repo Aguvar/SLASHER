@@ -28,10 +28,10 @@ namespace LogServer.Models
         private class MatchResult
         {
             public char Team { get; private set; }
-            public char Result { get; private set; }
+            public string Result { get; private set; }
             public DateTime Date { get; private set; }
 
-            public MatchResult(char team, char result)
+            public MatchResult(char team, string result)
             {
                 Team = team;
                 Result = result;
@@ -74,12 +74,14 @@ namespace LogServer.Models
             return $"Last 10 matches statistics for {nickname}\nWins: {wins}\nLosses: {losses}\nTimes played as Survivor: {survivorTimes}\nTimes played as Monster: {monsterTimes}";
         }
 
-        public void AddPlayerMatchResult(string nickname, char team, char result)
+        public void AddPlayerMatchResult(string nickname, char team, bool wonTheMatch)
         {
             if (!_statistics.ContainsKey(nickname))
             {
                 _statistics[nickname] = new List<MatchResult>();
             }
+
+            string result = wonTheMatch ? "Won" : "Lost";
 
             _statistics[nickname].Add(new MatchResult(team, result));
 

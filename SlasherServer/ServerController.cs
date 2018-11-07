@@ -16,8 +16,11 @@ namespace SlasherServer
         private static bool terminateConsole = false;
         private Socket listeningSocket;
 
+        private static ISlasherLogger logger;
+
         public ServerController()
         {
+            logger = new MsmqLogger();
             game = new GameHandler();
         }
 
@@ -82,6 +85,7 @@ namespace SlasherServer
             ClientHandler.BroadcastMessage("\nA new game is starting, fight for your lives!");
 
             game.StartGame();
+            logger.LogMatchLine("A new match has started");
 
             while (!game.IsOver())
             {
@@ -89,6 +93,8 @@ namespace SlasherServer
             }
 
             game.EndGame();
+            logger.LogMatchLine("The match has ended");
+            logger.FinishMatchLog();
 
             Console.WriteLine();
             Console.WriteLine("The game has ended!");
