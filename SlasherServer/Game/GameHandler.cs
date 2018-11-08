@@ -9,7 +9,7 @@ namespace SlasherServer.Game
     public class GameHandler
     {
         private IPlayer[,] gameBoard;
-        private List<IPlayer> players;
+        public List<IPlayer> Players { get; private set; }
 
         private const int BOARD_SIZE = 8;
         private const int MAX_CAPACITY = 15;
@@ -29,7 +29,7 @@ namespace SlasherServer.Game
         {
             matchTimer = new Stopwatch();
             gameBoard = new IPlayer[BOARD_SIZE, BOARD_SIZE];
-            players = new List<IPlayer>();
+            Players = new List<IPlayer>();
             matchJoinLock = new object();
             movePlayerLock = new object();
             attackPlayerLock = new object();
@@ -80,7 +80,7 @@ namespace SlasherServer.Game
 
         public bool IsGameFull()
         {
-            return players.Count == MAX_CAPACITY;
+            return Players.Count == MAX_CAPACITY;
         }
 
         public void AddPlayer(IPlayer player)
@@ -91,7 +91,7 @@ namespace SlasherServer.Game
                 {
                     Position position = GetRandomUnoccupiedPosition();
                     gameBoard[position.Row, position.Col] = player;
-                    players.Add(player);
+                    Players.Add(player);
                 }
             }
         }
@@ -181,7 +181,7 @@ namespace SlasherServer.Game
             matchTimer.Stop();
             matchTimer.Reset();
 
-            Winners = players.Where(p => p.Health > 0).ToList();
+            Winners = Players.Where(p => p.Health > 0).ToList();
 
             if (OnlySurvivorsAlive())
             {
@@ -196,7 +196,7 @@ namespace SlasherServer.Game
                 MatchResult = "x";
             }
 
-            players.Clear();
+            Players.Clear();
             for (int x = 0; x < BOARD_SIZE; x++)
             {
                 for (int y = 0; y < BOARD_SIZE; y++)
@@ -265,7 +265,7 @@ namespace SlasherServer.Game
 
         public IPlayer GetPlayerById(Guid id)
         {
-            return players.FirstOrDefault<IPlayer>(p => p.Id.Equals(id));
+            return Players.FirstOrDefault<IPlayer>(p => p.Id.Equals(id));
         }
 
     }

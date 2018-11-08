@@ -22,11 +22,15 @@ namespace SlasherServer
         private static object loginLock;
         private static object signupLock;
 
+        private static ISlasherLogger logger;
+
         public static void Initialize()
         {
             Users = new List<User>();
             LoggedUsers = new Dictionary<Guid, User>();
             ActiveConnections = new Dictionary<Guid, Socket>();
+
+            logger = new MsmqLogger();
 
             loginLock = new object();
             signupLock = new object();
@@ -172,6 +176,8 @@ namespace SlasherServer
 
             IPlayer playerWhoAttacks = game.GetPlayerById(socketId);
 
+            logger.LogMatchLine($"Player {playerWhoAttacks.Nickname} has attacked");
+
             if (!game.MatchOngoing)
             {
                 return "consoleprint#Woah woah, there's no game running right now, chill.";
@@ -281,6 +287,8 @@ namespace SlasherServer
         {
             GameHandler game = GetGame();
 
+            string nickname = LoggedUsers[socketId].Nickname;
+
             if (game.MatchOngoing)
             {
                 if (!game.IsGameFull())
@@ -292,13 +300,15 @@ namespace SlasherServer
                         case "s":
                             player = new Survivor()
                             {
-                                Id = socketId
+                                Id = socketId,
+                                Nickname = nickname
                             };
                             break;
                         case "m":
                             player = new Monster()
                             {
-                                Id = socketId
+                                Id = socketId,
+                                Nickname = nickname
                             };
                             break;
                         default:

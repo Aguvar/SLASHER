@@ -1,3 +1,4 @@
+using SlasherServer.Authentication;
 using SlasherServer.Game;
 using SlasherServer.Interfaces;
 using System;
@@ -103,6 +104,8 @@ namespace SlasherServer
 
             List<IPlayer> winners = game.Winners;
 
+            SubmitPlayerStatistics(ClientHandler.Users, game.Players, winners);
+
             switch (game.MatchResult)
             {
                 case "s":
@@ -129,6 +132,18 @@ namespace SlasherServer
                 default:
                     ClientHandler.BroadcastMessage("\nNobody wins! Everyone loses! \n\nGit gud guys come on :^)");
                     break;
+            }
+        }
+
+        private static void SubmitPlayerStatistics(List<User> users, List<IPlayer> players, List<IPlayer> winners)
+        {
+            foreach (var player in players)
+            {
+                string nickname = player.Nickname;
+                bool winner = winners.Exists(w => w.Id.Equals(player.Id));
+
+                logger.LogPlayerMatchResult(nickname, player.GetPlayerType(), winner);
+                logger.LogPlayerScore(nickname, player.Score, player.GetPlayerType());
             }
         }
 
