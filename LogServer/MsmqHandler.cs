@@ -33,7 +33,7 @@ namespace LogServer
                         case "log":
                             AddLog(message);
                             break;
-                        case "endLog":
+                        case "endlog":
                             FinishGameLog();
                             break;
                         case "highscore":

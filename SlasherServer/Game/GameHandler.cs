@@ -37,6 +37,8 @@ namespace SlasherServer.Game
 
         public void ExecutePlayerAttack(IPlayer playerWhoAttacks)
         {
+            playerWhoAttacks.Score += 5;
+
             lock (attackPlayerLock)
             {
                 Position playerPosition = GetPlayerPosition(playerWhoAttacks);
@@ -50,10 +52,12 @@ namespace SlasherServer.Game
                             {
                                 IPlayer target = gameBoard[currentRow, currentCol];
                                 target.ReceiveDamageFrom(playerWhoAttacks);
+
+                                target.Score -= 5;
                             }
                         }
                     }
-                } 
+                }
             }
         }
 
@@ -69,13 +73,12 @@ namespace SlasherServer.Game
                     {
                         gameBoard[currentPosition.Row, currentPosition.Col] = null;
                         gameBoard[nextPosition.Row, nextPosition.Col] = player;
+                        player.Score++;
                         return true;
                     }
                 }
                 return false;
             }
-
-            
         }
 
         public bool IsGameFull()
@@ -182,6 +185,11 @@ namespace SlasherServer.Game
             matchTimer.Reset();
 
             Winners = Players.Where(p => p.Health > 0).ToList();
+
+            foreach (var winner in Winners)
+            {
+                winner.Score += 500;
+            }
 
             if (OnlySurvivorsAlive())
             {

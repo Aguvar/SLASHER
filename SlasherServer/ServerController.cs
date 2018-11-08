@@ -93,6 +93,8 @@ namespace SlasherServer
                 Thread.Sleep(200);
             }
 
+            var pastPlayers = game.Players.ToList();
+
             game.EndGame();
             logger.LogMatchLine("The match has ended");
             logger.FinishMatchLog();
@@ -104,7 +106,7 @@ namespace SlasherServer
 
             List<IPlayer> winners = game.Winners;
 
-            SubmitPlayerStatistics(ClientHandler.Users, game.Players, winners);
+            SubmitPlayerStatistics(ClientHandler.Users, pastPlayers, winners);
 
             switch (game.MatchResult)
             {

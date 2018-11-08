@@ -26,7 +26,7 @@ namespace SlasherServer
         {
             using (var sendQueue = new MessageQueue(queuePath))
             {
-                var message = new Message
+                var message = new Message(string.Empty)
                 {
                     Label = "endlog"
                 };
@@ -74,7 +74,7 @@ namespace SlasherServer
             {
                 var message = new Message(messageContent)
                 {
-                    Label = "statistic"
+                    Label = "highscore"
                 };
 
                 sendQueue.Send(message);

@@ -318,6 +318,8 @@ namespace SlasherServer
                     Position position = game.GetPlayerPosition(player);
                     string surroundings = game.GetPlayerSurroundings(position, 1);
 
+                    logger.LogMatchLine($"Player {player.Nickname} has joined the match");
+
                     return $"consoleprint#{surroundings}\n\nGame joined! Enjoy your stay!";
                 }
                 else
@@ -338,6 +340,9 @@ namespace SlasherServer
             if (game.MatchOngoing)
             {
                 IPlayer player = game.GetPlayerById(socketId);
+
+                logger.LogMatchLine($"Player {player.Nickname} has moved");
+
                 if (player != null)
                 {
                     if (player.Health == 0)
