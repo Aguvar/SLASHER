@@ -2,6 +2,7 @@ using SlasherServer.Game;
 using SlasherServer.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -21,17 +22,16 @@ namespace SlasherServer
 
         private static object loginLock;
         private static object signupLock;
-        private static UserServer.Services.UserServices remoteUserService = (UserServer.Services.UserServices)Activator.GetObject(
-               typeof(UserServer.Services.UserServices),
-               "tcp://127.0.0.1:7000/RemoteUserServices");
+        private static UserServer.Services.UserServices remoteUserService;
 
         public static void Initialize()
         {
+            string ip = ConfigurationManager.AppSettings["ipaddress"];
             LoggedUsers = new Dictionary<Guid, User>();
             ActiveConnections = new Dictionary<Guid, Socket>();
             remoteUserService = (UserServer.Services.UserServices)Activator.GetObject(
                typeof(UserServer.Services.UserServices),
-               "tcp://127.0.0.1:7000/RemoteUserServices");
+               $"tcp://{ip}:8080/RemoteUserServices");
 
             loginLock = new object();
             signupLock = new object();
@@ -204,6 +204,7 @@ namespace SlasherServer
       
             lock (signupLock)
             {
+                var Ususarios = remoteUserService.GetUsers();
                 if (Users.Exists(u => u.Nickname.Equals(nickname)))
                 {
                     return string.Format("consoleprint#User {0} is already registered", nickname);

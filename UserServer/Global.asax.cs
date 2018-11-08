@@ -2,6 +2,7 @@
 using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Tcp;
+using System.Threading;
 using System.Web.Http;
 using System.Web.Mvc;
 using System.Web.Optimization;
@@ -24,7 +25,7 @@ namespace UserServer
 
         private void SetupRemotingService()
         {
-            var remotingTcpChannel = new TcpChannel(7000);
+            var remotingTcpChannel = new TcpChannel(8080);
 
             ChannelServices.RegisterChannel(
               remotingTcpChannel,
@@ -36,7 +37,14 @@ namespace UserServer
               WellKnownObjectMode.SingleCall);
 
             Console.WriteLine("User Services server has started at: tcp://127.0.0.1/RemoteUserServices");
-            Console.ReadLine();
+
+            Thread unregisterChannelThread = new Thread(() => UnregisterChannel(remotingTcpChannel));
+            unregisterChannelThread.Start();
+        }
+
+
+        private static void UnregisterChannel(TcpChannel remotingTcpChannel)
+        {
             ChannelServices.UnregisterChannel(remotingTcpChannel);
         }
     }
