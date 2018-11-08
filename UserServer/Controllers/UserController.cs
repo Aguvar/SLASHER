@@ -17,7 +17,7 @@ namespace UserServer.Controllers
         public IEnumerable<User> Get()
         {
             userServices = new UserServices();
-            return userServices.GetAll();
+            return userServices.GetUsers();
         }
 
         [HttpGet]

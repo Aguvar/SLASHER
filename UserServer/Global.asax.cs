@@ -27,15 +27,15 @@ namespace UserServer
             var remotingTcpChannel = new TcpChannel(7000);
 
             ChannelServices.RegisterChannel(
-                remotingTcpChannel,
-                false);
+              remotingTcpChannel,
+              false);
 
             RemotingConfiguration.RegisterWellKnownServiceType(
-                typeof(UserServices),
-                "RemoteUserServices",
-                WellKnownObjectMode.SingleCall);
+              typeof(Services.UserServices),
+              "RemoteUserServices",
+              WellKnownObjectMode.SingleCall);
 
-            Console.WriteLine("Server has started at: tcp://127.0.0.1/RemoteUserServices");
+            Console.WriteLine("User Services server has started at: tcp://127.0.0.1/RemoteUserServices");
             Console.ReadLine();
             ChannelServices.UnregisterChannel(remotingTcpChannel);
         }

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Web;
 using UserServer.Exceptions;
 
 namespace UserServer.Services
@@ -22,18 +21,13 @@ namespace UserServer.Services
             }
         }
 
-        private List<User> GetUsers()
+        public List<User> GetUsers()
         {
             if(Users == null)
             {
                 Users = new List<User>();
             }
             return Users;
-        }
-
-        public List<User> GetAll()
-        {
-            return GetUsers();
         }
 
         public void Add(User user)

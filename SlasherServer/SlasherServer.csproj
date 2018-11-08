@@ -43,7 +43,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Authentication\User.cs" />
     <Compile Include="ClientHandler.cs" />
     <Compile Include="Game\GameHandler.cs" />
     <Compile Include="Game\Monster.cs" />
@@ -59,6 +58,12 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Avatars\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\UserServer\UserServer.csproj">
+      <Project>{b94e9f03-fd39-42c4-99a6-a6c6845f896d}</Project>
+      <Name>UserServer</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
