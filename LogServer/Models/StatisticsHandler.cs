@@ -68,8 +68,8 @@ namespace LogServer.Models
             int survivorTimes = playerStatistics.Where(mr => mr.Team.Equals('S')).Count();
             int monsterTimes = playerStatistics.Where(mr => mr.Team.Equals('M')).Count();
 
-            int wins = playerStatistics.Where(mr => mr.Result.Equals('W')).Count();
-            int losses = playerStatistics.Where(mr => mr.Result.Equals('L')).Count();
+            int wins = playerStatistics.Where(mr => mr.Result.Equals("Won")).Count();
+            int losses = playerStatistics.Where(mr => mr.Result.Equals("Lost")).Count();
 
             return $"Last 10 matches statistics for {nickname}\nWins: {wins}\nLosses: {losses}\nTimes played as Survivor: {survivorTimes}\nTimes played as Monster: {monsterTimes}";
         }

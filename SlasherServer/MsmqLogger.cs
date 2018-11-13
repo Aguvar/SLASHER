@@ -38,7 +38,7 @@ namespace SlasherServer
         public void LogMatchLine(string line)
         {
 
-            string messageContent = $"{line} - {DateTime.Now.ToShortDateString()}";
+            string messageContent = $"{line} - {DateTime.Now.ToLongDateString()} {DateTime.Now.ToLongTimeString()}";
 
             using (var sendQueue = new MessageQueue(queuePath))
             {
