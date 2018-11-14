@@ -69,12 +69,29 @@ namespace SlasherServer
                 try
                 {
                     var msgLength = new byte[4];
-                    clientConnection.Receive(msgLength);
+                    int totalReceived = 0;
+                    while (totalReceived < 4)
+                    {
+                        var currentlyReceived = clientConnection.Receive(msgLength, totalReceived, 4 - totalReceived, SocketFlags.None);
+                        if (currentlyReceived == 0)
+                        {
+                            throw new SocketException();
+                        }
+                        totalReceived += currentlyReceived;
+                    }
 
                     int msgLengthInt = BitConverter.ToInt32(msgLength, 0);
                     var msgBytes = new byte[msgLengthInt];
-
-                    clientConnection.Receive(msgBytes);
+                    totalReceived = 0;
+                    while (totalReceived < msgLengthInt)
+                    {
+                        var currentlyReceived = clientConnection.Receive(msgBytes, totalReceived, msgLengthInt - totalReceived, SocketFlags.None);
+                        if (currentlyReceived == 0)
+                        {
+                            throw new SocketException();
+                        }
+                        totalReceived += currentlyReceived;
+                    }
 
                     string message = Encoding.ASCII.GetString(msgBytes);
 
