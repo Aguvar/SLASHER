@@ -31,7 +31,7 @@ namespace SlasherServer
             ActiveConnections = new Dictionary<Guid, Socket>();
             remoteUserService = (UserServer.Services.UserServices)Activator.GetObject(
                typeof(UserServer.Services.UserServices),
-               $"tcp://{ip}:8080/RemoteUserServices");
+               $"tcp://{ip}:8001/RemoteUserServices");
 
             loginLock = new object();
             signupLock = new object();
@@ -204,7 +204,7 @@ namespace SlasherServer
       
             lock (signupLock)
             {
-                var Ususarios = remoteUserService.GetUsers();
+                var Users = remoteUserService.GetUsers();
                 if (Users.Exists(u => u.Nickname.Equals(nickname)))
                 {
                     return string.Format("consoleprint#User {0} is already registered", nickname);

@@ -33,8 +33,14 @@ namespace UserServer.Controllers
         public HttpResponseMessage Post([FromBody]User user)
         {
             userServices = new UserServices();
-            userServices.Add(user);
-            return Request.CreateResponse(HttpStatusCode.Created, user.Nickname);
+            try
+            {
+                userServices.Add(user);
+                return Request.CreateResponse(HttpStatusCode.Created, user.Nickname);
+            } catch(ElementAlreadyExistsException e)
+            {
+                return Request.CreateResponse(HttpStatusCode.NotAcceptable);
+            }
         }
 
         [HttpPut]

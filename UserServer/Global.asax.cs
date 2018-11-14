@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Tcp;
@@ -21,11 +22,13 @@ namespace UserServer
             FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
             RouteConfig.RegisterRoutes(RouteTable.Routes);
             BundleConfig.RegisterBundles(BundleTable.Bundles);
+            HttpConfiguration config = GlobalConfiguration.Configuration;
+            config.Formatters.JsonFormatter.SerializerSettings = new JsonSerializerSettings();
         }
 
         private void SetupRemotingService()
         {
-            var remotingTcpChannel = new TcpChannel(8080);
+            var remotingTcpChannel = new TcpChannel(8001);
 
             ChannelServices.RegisterChannel(
               remotingTcpChannel,
@@ -38,8 +41,8 @@ namespace UserServer
 
             Console.WriteLine("User Services server has started at: tcp://127.0.0.1/RemoteUserServices");
 
-            Thread unregisterChannelThread = new Thread(() => UnregisterChannel(remotingTcpChannel));
-            unregisterChannelThread.Start();
+            //Thread unregisterChannelThread = new Thread(() => UnregisterChannel(remotingTcpChannel));
+            //unregisterChannelThread.Start();
         }
 
 

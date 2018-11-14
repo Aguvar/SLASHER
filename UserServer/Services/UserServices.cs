@@ -32,6 +32,10 @@ namespace UserServer.Services
 
         public void Add(User user)
         {
+            if (Exists(user.Nickname))
+            {
+                throw new ElementAlreadyExistsException("A user already exists with that nickname");
+            }
             List<User> users = GetUsers();
             users.Add(user);
         }
@@ -61,8 +65,15 @@ namespace UserServer.Services
             Delete(nickname);
             Add(updatedUser);
         }
-    }
 
+        private bool Exists(string nickname)
+        {
+            User user = GetUsers().FirstOrDefault<User>(u => u.Nickname == nickname);
+            return user != null;
+        }
+    }
+    
+    [Serializable]
     public class User
     {
         public string Nickname { get; set; }
