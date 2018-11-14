@@ -1,8 +1,8 @@
-using SlasherServer.Authentication;
 using SlasherServer.Game;
 using SlasherServer.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -10,25 +10,30 @@ using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
 using System.Threading;
+using UserServer.Services;
 
 namespace SlasherServer
 {
     public static class ClientHandler
     {
-        public static List<User> Users { get; set; }
+        public static List<User> Users { get => remoteUserService.GetUsers(); private set { Users = value; } }
         public static Dictionary<Guid, User> LoggedUsers { get; set; }
         public static Dictionary<Guid, Socket> ActiveConnections { get; set; }
 
         private static object loginLock;
         private static object signupLock;
+        private static UserServer.Services.UserServices remoteUserService;
 
         private static ISlasherLogger logger;
 
         public static void Initialize()
         {
-            Users = new List<User>();
+            string ip = ConfigurationManager.AppSettings["ipaddress"];
             LoggedUsers = new Dictionary<Guid, User>();
             ActiveConnections = new Dictionary<Guid, Socket>();
+            remoteUserService = (UserServer.Services.UserServices)Activator.GetObject(
+               typeof(UserServer.Services.UserServices),
+               $"tcp://{ip}:8001/RemoteUserServices");
 
             logger = new MsmqLogger();
 
@@ -219,15 +224,16 @@ namespace SlasherServer
         {
             string currentExecutionDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             string avatarRoute = Path.Combine(currentExecutionDir, string.Format("Avatars/{0}Avatar.{1}", nickname, imageFormat));
-
+      
             lock (signupLock)
             {
+                var Users = remoteUserService.GetUsers();
                 if (Users.Exists(u => u.Nickname.Equals(nickname)))
                 {
                     return string.Format("consoleprint#User {0} is already registered", nickname);
                 }
 
-                Users.Add(new User()
+                remoteUserService.Add(new User()
                 {
                     Nickname = nickname,
                     AvatarRoute = avatarRoute
@@ -271,7 +277,7 @@ namespace SlasherServer
                 {
                     if (!LoggedUsers.Any(u => u.Value.Nickname.Equals(firstCommand)))
                     {
-                        User userToLog = Users.Where(u => u.Nickname.Equals(firstCommand)).First();
+                        User userToLog = remoteUserService.GetUsers().Where(u => u.Nickname.Equals(firstCommand)).First();
                         LoggedUsers.Add(socketId, userToLog);
                         return "loggedin";
                     }

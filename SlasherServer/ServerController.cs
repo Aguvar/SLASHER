@@ -183,7 +183,11 @@ namespace SlasherServer
 
         private static void PrintRegisteredUsers()
         {
-            foreach (var user in ClientHandler.Users)
+            UserServer.Services.UserServices remoteUserService = (UserServer.Services.UserServices)Activator.GetObject(
+               typeof(UserServer.Services.UserServices),
+               "tcp://127.0.0.1:7000/RemoteUserServices");
+
+            foreach (var user in remoteUserService.GetUsers())
             {
                 Console.WriteLine(user.Nickname);
             }
