@@ -1,25 +1,26 @@
 ﻿using SlasherServer.Interfaces;
 using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Configuration;
 using System.Messaging;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SlasherServer
 {
     public class MsmqLogger : ISlasherLogger
     {
 
-        private const string queuePath = @".\private$\logQueue";//Hacer que la direccion sea remota
+        private string queuePath = @".\private$\logQueue";//Hacer que la direccion sea remota
 
 
         public MsmqLogger()
         {
-                if (!MessageQueue.Exists(queuePath))
-                {
-                    MessageQueue.Create(queuePath);
-                }
+            string logServerIp = ConfigurationManager.AppSettings["logserveripaddress"];
+
+            queuePath = $@"FormatName:Direct=TCP:{logServerIp}\private$\logQueue";
+
+            //if (!MessageQueue.Exists(queuePath))
+            //{
+            //    MessageQueue.Create(queuePath);
+            //}
         }
 
         public void FinishMatchLog()

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Configuration;
 
 namespace SlasherServer
 {
@@ -7,7 +6,7 @@ namespace SlasherServer
     {
         static void Main(string[] args)
         {
-            string ipString = ConfigurationManager.AppSettings["ipaddress"];
+            
 
             Console.WriteLine("---Slasher Server V.0.01---");
             Console.WriteLine();
@@ -16,7 +15,7 @@ namespace SlasherServer
             int listenPort = Int32.Parse(Console.ReadLine());
 
             ServerController serverController = new ServerController();
-            serverController.StartServer(ipString, listenPort);
+            serverController.StartServer(listenPort);
         }
     }
 }

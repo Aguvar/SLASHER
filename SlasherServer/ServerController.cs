@@ -1,12 +1,13 @@
-using SlasherServer.Authentication;
 using SlasherServer.Game;
 using SlasherServer.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using UserServer.Services;
 
 namespace SlasherServer
 {
@@ -17,6 +18,9 @@ namespace SlasherServer
         private static bool terminateConsole = false;
         private Socket listeningSocket;
 
+        private static string userServerIp;
+        private static string ipString;
+
         private static ISlasherLogger logger;
 
         public ServerController()
@@ -25,8 +29,11 @@ namespace SlasherServer
             game = new GameHandler();
         }
 
-        public void StartServer(string ipString, int listenPort)
+        public void StartServer(int listenPort)
         {
+            ipString = ConfigurationManager.AppSettings["ipaddress"];
+            userServerIp = ConfigurationManager.AppSettings["userserveripaddress"];
+
             var serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             serverSocket.Bind(new IPEndPoint(IPAddress.Parse(ipString), listenPort));
             listeningSocket = serverSocket;
@@ -183,9 +190,7 @@ namespace SlasherServer
 
         private static void PrintRegisteredUsers()
         {
-            UserServer.Services.UserServices remoteUserService = (UserServer.Services.UserServices)Activator.GetObject(
-               typeof(UserServer.Services.UserServices),
-               "tcp://127.0.0.1:7000/RemoteUserServices");
+            UserServices remoteUserService = (UserServices)Activator.GetObject(typeof(UserServices), $"tcp://{userServerIp}:8001/RemoteUserServices");
 
             foreach (var user in remoteUserService.GetUsers())
             {

@@ -22,18 +22,17 @@ namespace SlasherServer
 
         private static object loginLock;
         private static object signupLock;
-        private static UserServer.Services.UserServices remoteUserService;
+        private static UserServices remoteUserService;
 
         private static ISlasherLogger logger;
 
         public static void Initialize()
         {
             string ip = ConfigurationManager.AppSettings["ipaddress"];
+            string userServerip = ConfigurationManager.AppSettings["userserveripaddress"];
             LoggedUsers = new Dictionary<Guid, User>();
             ActiveConnections = new Dictionary<Guid, Socket>();
-            remoteUserService = (UserServer.Services.UserServices)Activator.GetObject(
-               typeof(UserServer.Services.UserServices),
-               $"tcp://{ip}:8001/RemoteUserServices");
+            remoteUserService = (UserServices)Activator.GetObject(typeof(UserServices),$"tcp://{userServerip}:8001/RemoteUserServices");
 
             logger = new MsmqLogger();
 

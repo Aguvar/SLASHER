@@ -14,10 +14,11 @@ namespace UserServer.Services
             if(Users == null)
             {
                 Users = new List<User>();
-                User testUser = new User();
-                testUser.Nickname = "rickrolls";
-                testUser.AvatarRoute = "c:/notporn/homework/tests.mp4";
-                Users.Add(testUser);
+                //Test user
+                //User testUser = new User();
+                //testUser.Nickname = "rickrolls";
+                //testUser.AvatarRoute = "c:/homework/tests.mp4";
+                //Users.Add(testUser);
             }
         }
 
