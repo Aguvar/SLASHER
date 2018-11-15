@@ -63,16 +63,8 @@
     <Folder Include="Avatars\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\LogServer\LogServer.csproj">
-      <Project>{0ae30ed4-c062-4994-a484-d98dd0972464}</Project>
-      <Name>LogServer</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\SlasherClient\SlasherClient.csproj">
-      <Project>{fbd4ed9f-b09b-44c4-8fc9-20076b4a5d2e}</Project>
-      <Name>SlasherClient</Name>
-    </ProjectReference>
     <ProjectReference Include="..\UserServer\UserServer.csproj">
-      <Project>{b94e9f03-fd39-42c4-99a6-a6c6845f896d}</Project>
+      <Project>{B94E9F03-FD39-42C4-99A6-A6C6845F896D}</Project>
       <Name>UserServer</Name>
     </ProjectReference>
   </ItemGroup>
